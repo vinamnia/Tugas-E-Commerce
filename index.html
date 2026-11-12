@@ -192,4 +192,1361 @@
   </a>
 
   <!-- ================= MODAL DETAIL PRODUK ================= -->
-  <div id="modal"
+  <div id="modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-ink/40 backdrop-blur-sm p-4">
+    <div class="fade-in bg-white rounded-3xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto shadow-2xl">
+      <button data-action="close-modal" aria-label="Tutup" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-blush/60 hover:bg-blush text-maroon">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST ================= -->
+  <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-50 whitespace-nowrap"></div>
+
+<script>
+/* ==========================================================
+   DATA
+   ========================================================== */
+const ARTISTS = [
+  { name: 'CORTIS',    short: 'CRT' },
+  { name: 'ENHYPEN',   short: 'EN' },
+  { name: 'NCT DREAM', short: 'ND' },
+  { name: 'TREASURE',  short: 'TR' },
+  { name: 'RIZE',      short: 'RZ' },
+  { name: 'SEVENTEEN', short: '17' }
+];
+
+const PRODUCTS = [
+  {
+    id: 'p1', artist: 'CORTIS', name: 'Cortis Keychain Shaker (COTL Ver)', price: 80000,
+    emoji: '🔑', grad: 'from-blush to-butter', status: 'Siap Kirim',
+    short: 'Gantungan kunci shaker bertema Coer yang lucu dan bisa diguncang.',
+    desc: 'Keychain shaker edisi COTL Ver yang didesain khusus untuk Coer. Isian bergerak lembut setiap kali diguncang, cocok untuk tas, kunci, atau dipajang di meja belajar.',
+    specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Ballchain sebagai gantungan', '5 pcs isian shaker ukuran ±1 cm', 'Tema resmi Coer']
+  },
+  {
+    id: 'p2', artist: 'CORTIS', name: 'Cortis Ball Plush', price: 75000,
+    emoji: '🧸', grad: 'from-sky to-blush', status: 'Pre-Order',
+    short: 'Official plush collection dengan karakter bola bulu yang menggemaskan.',
+    desc: 'Boneka plush berbentuk bola bulu yang empuk dan menggemaskan. Tersedia dalam varian ACAI, REDRED, dan TNT. Bisa jadi teman tidur, pajangan, atau hadiah untuk sesama Coer.',
+    specs: ['Bahan: Bulu halus lembut', 'Karakter unik bola bulu', 'Varian: ACAI · REDRED · TNT', 'Kategori: Official plush collection']
+  },
+  {
+    id: 'p3', artist: 'CORTIS', name: 'Slogan Towel Cortis', price: 260000,
+    emoji: '🧣', grad: 'from-butter to-mint', status: 'Stok Habis',
+    short: 'Kain slogan eksklusif yang wajib dibawa saat nonton konser.',
+    desc: 'Slogan towel eksklusif bertema konser. Bisa dibawa saat acara, dikibarkan saat lightstick mati, atau dijadikan koleksi.',
+    specs: ['Bahan: Kain katun premium', 'Desain slogan eksklusif', 'Ukuran standar slogan towel', 'Cocok untuk konser & fansign']
+  },
+  {
+    id: 'p4', artist: 'CORTIS', name: 'Cortis Ball Ring', price: 220000,
+    emoji: '💍', grad: 'from-mint to-sky', status: 'Pre-Order',
+    short: 'Aksesoris cincin bertema karakter Cortis yang stylish dan manis.',
+    desc: 'Cincin aksesoris dengan motif karakter Cortis. Ringan, nyaman dipakai sehari-hari, dan jadi statement kecil untuk penggemar.',
+    specs: ['Bahan: Logam pelapis (nikel-free)', 'Motif karakter Cortis', 'Ukuran fleksibel', 'Tersedia dalam beberapa ukuran']
+  },
+  {
+    id: 'p5', artist: 'CORTIS', name: 'Cortis Official Light Stick', price: 800000,
+    emoji: '🪄', grad: 'from-cream to-blush', status: 'Siap Kirim',
+    short: 'Official light stick Cortis untuk menemani setiap momen konser.',
+    desc: 'Light stick resmi bertema Cortis dengan desain ramping dan elegan. Nyalakan bersama Coer lain saat konser berlangsung.',
+    specs: ['Desain ramping dan elegan', 'Tema resmi Cortis', 'Cocok untuk konser & koleksi', 'Kategori: Official light stick']
+  }
+];
+
+const HERO_SLIDES = [
+  {
+    tag: 'Official Plush Collection', title: 'CORTIS BALL', sub: 'Official Plush Collection',
+    variants: 'ACAI · REDRED · TNT', note: 'Available now on Funstuff Shop!',
+    emoji: '🧸', grad: 'from-sky via-blush to-butter', target: 'p2'
+  },
+  {
+    tag: 'Keychain Shaker', title: 'COTL VER', sub: 'Keychain Shaker 6 x 6 cm',
+    variants: '5 pcs isian shaker', note: 'Gantungan kunci bertema Coer, siap kirim!',
+    emoji: '🔑', grad: 'from-blush via-butter to-mint', target: 'p1'
+  },
+  {
+    tag: 'Light Stick', title: 'OFFICIAL LIGHT STICK', sub: 'Teman setia setiap konser',
+    variants: 'Tema resmi Cortis', note: 'Nyalakan bersama Coer di setiap konser!',
+    emoji: '🪄', grad: 'from-mint via-sky to-blush', target: 'p5'
+  }
+];
+
+const COUPONS = {
+  COERFUN10:   { type: 'percent', value: 10,    label: 'Diskon 10%' },
+  FUNSTUFF15K: { type: 'fixed',   value: 15000, label: 'Potongan Rp15.000' }
+};
+
+const COURIERS = {
+  JNE:     { fee: 18000, eta: '2–3 hari kerja' },
+  'J&T':   { fee: 16000, eta: '2–3 hari kerja' },
+  SiCepat: { fee: 15000, eta: '1–3 hari kerja' }
+};
+
+const PAYMENTS = {
+  bca:     { label: 'Transfer BCA',     type: 'bank', number: '1234567890',    holder: 'PT Funstuff Indonesia' },
+  mandiri: { label: 'Transfer Mandiri', type: 'bank', number: '1100012345678', holder: 'PT Funstuff Indonesia' },
+  qris:    { label: 'QRIS',             type: 'qris' }
+};
+
+const PROVINCES = ['DKI Jakarta', 'Jawa Barat', 'Banten', 'Jawa Tengah', 'Jawa Timur', 'DI Yogyakarta', 'Bali', 'Sumatera Utara', 'Sulawesi Selatan'];
+
+const STATUS_UNPAID = 'Menunggu Pembayaran';
+const STATUS_PAID   = 'LUNAS / DIPROSES';
+
+/* ==========================================================
+   STORAGE (localStorage)
+   Catatan: ini simulasi untuk demo/tugas. Pembayaran sungguhan
+   membutuhkan payment gateway (Midtrans/Xendit) yang memberi
+   notifikasi (webhook) ke server, dan password wajib di-hash.
+   ========================================================== */
+const CART_KEY = 'funstuff_cart';
+const USERS_KEY = 'funstuff_users';
+const ORDERS_KEY = 'funstuff_orders';
+const SESSION_KEY = 'funstuff_session';
+
+const LS = {
+  get(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    } catch (e) { return fallback; }
+  },
+  set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+};
+
+const getUsers = () => LS.get(USERS_KEY, []);
+const setUsers = u => LS.set(USERS_KEY, u);
+const getOrders = () => LS.get(ORDERS_KEY, []);
+const setOrders = o => LS.set(ORDERS_KEY, o);
+
+function setSession(username, remember) {
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, username);
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+function currentUser() {
+  const username = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+  if (!username) return null;
+  return getUsers().find(u => u.username === username) || null;
+}
+
+/* ==========================================================
+   STATE
+   ========================================================== */
+let cart = LS.get(CART_KEY, []);
+let coupon = null;
+let authMode = 'login';
+let artistFilter = 'ALL';
+let searchQuery = '';
+let heroIndex = 0;
+
+/* ==========================================================
+   HELPER
+   ========================================================== */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const formatRp = n => 'Rp' + Number(n).toLocaleString('id-ID');
+const formatDate = iso => new Date(iso).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+const getProduct = id => PRODUCTS.find(p => p.id === id);
+const inputCls = 'w-full rounded-xl border border-maroon/15 bg-white px-4 py-3 text-sm transition';
+const labelCls = 'block text-sm font-semibold text-maroon mb-1';
+
+function showToast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.remove('opacity-0');
+  t.classList.add('opacity-100');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => {
+    t.classList.remove('opacity-100');
+    t.classList.add('opacity-0');
+  }, 2400);
+}
+
+function trackEvent(name, params = {}) {
+  if (typeof gtag === 'function') gtag('event', name, params);
+}
+
+function cartSummary() {
+  const items = cart.map(c => ({ ...c, product: getProduct(c.id) })).filter(i => i.product);
+  const subtotal = items.reduce((sum, i) => sum + i.product.price * i.qty, 0);
+  return { items, subtotal };
+}
+
+function calcDiscount(subtotal) {
+  if (!coupon) return 0;
+  if (coupon.type === 'percent') return Math.round(subtotal * coupon.value / 100);
+  return Math.min(coupon.value, subtotal);
+}
+
+function calcShipping(province, courierKey) {
+  if (province === 'DKI Jakarta') return 0;
+  return (COURIERS[courierKey] || COURIERS.JNE).fee;
+}
+
+function saveCart() {
+  LS.set(CART_KEY, cart);
+  updateBadge(true);
+}
+
+function updateBadge(bump = false) {
+  const count = cart.reduce((s, c) => s + c.qty, 0);
+  const badge = $('#cart-badge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+  if (bump && count > 0) {
+    badge.classList.remove('bump');
+    void badge.offsetWidth;
+    badge.classList.add('bump');
+  }
+}
+
+function updateAccountLink() {
+  const link = $('#account-link');
+  const user = currentUser();
+  if (user) {
+    link.innerHTML = `
+      <span class="w-8 h-8 rounded-full bg-brand text-white text-xs font-bold flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</span>
+      <span class="text-sm font-semibold text-maroon max-w-[100px] truncate">${esc(user.name.split(' ')[0])}</span>`;
+    link.setAttribute('aria-label', 'Akun ' + user.name);
+  } else {
+    link.innerHTML = `
+      <span class="p-1.5 rounded-full flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"/>
+          <path stroke-linecap="round" d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
+        </svg>
+      </span>`;
+    link.setAttribute('aria-label', 'Akun');
+  }
+}
+
+function parseRoute() {
+  const raw = location.hash.replace(/^#\/?/, '');
+  const [page, ...rest] = raw.split('/');
+  let param = rest.join('/');
+  try { param = decodeURIComponent(param); } catch (e) {}
+  return { page: page || 'beranda', param };
+}
+
+/* ==========================================================
+   CART ACTIONS
+   ========================================================== */
+function addToCart(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  if (p.status === 'Stok Habis') return showToast('Maaf, stok produk ini sedang habis');
+  const existing = cart.find(c => c.id === id);
+  if (existing) existing.qty += 1;
+  else cart.push({ id, qty: 1 });
+  saveCart();
+  showToast(`${p.name} ditambahkan ke keranjang`);
+  trackEvent('add_to_cart', {
+    currency: 'IDR', value: p.price,
+    items: [{ item_id: id, item_name: p.name, price: p.price, quantity: 1 }]
+  });
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  saveCart();
+  render();
+}
+
+function removeItem(id) {
+  cart = cart.filter(c => c.id !== id);
+  saveCart();
+  render();
+  showToast('Produk dihapus dari keranjang');
+}
+
+/* ==========================================================
+   TEMPLATE KOMPONEN
+   ========================================================== */
+function productStatusBadge(status) {
+  const map = {
+    'Siap Kirim': 'bg-emerald-100 text-emerald-700',
+    'Pre-Order': 'bg-violet-100 text-violet-700',
+    'Stok Habis': 'bg-brand text-white'
+  };
+  return map[status] || 'bg-gray-100 text-gray-600';
+}
+
+function orderStatusBadge(status) {
+  return status === STATUS_PAID
+    ? 'bg-emerald-600 text-white'
+    : 'bg-amber-100 text-amber-700';
+}
+
+function productCard(p) {
+  const habis = p.status === 'Stok Habis';
+  return `
+  <article class="group bg-white rounded-2xl p-4 border border-maroon/10 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col">
+    <div class="relative aspect-square rounded-xl bg-gradient-to-br ${p.grad} flex items-center justify-center overflow-hidden">
+      <span class="text-7xl group-hover:scale-110 transition duration-300">${p.emoji}</span>
+      <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded-full ${productStatusBadge(p.status)} shadow-sm">${p.status.toUpperCase()}</span>
+    </div>
+    <p class="mt-4 text-[11px] font-semibold text-brand uppercase tracking-wider">${p.artist}</p>
+    <h3 class="font-semibold leading-snug text-sm line-clamp-2 min-h-[2.5rem] mt-1">${p.name}</h3>
+    <p class="text-xs text-ink/60 mt-1 line-clamp-2">${p.short}</p>
+    <p class="font-bold text-brand mt-3">${formatRp(p.price)}</p>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <button data-action="detail" data-id="${p.id}" class="btn-ghost rounded-full py-2 text-xs font-semibold">Detail</button>
+      <button data-action="add" data-id="${p.id}" ${habis ? 'disabled' : ''} class="btn-primary rounded-full py-2 text-xs font-semibold">${habis ? 'Habis' : '+ Keranjang'}</button>
+    </div>
+  </article>`;
+}
+
+function emptyCartView() {
+  return `
+  <section class="fade-in text-center py-20">
+    <div class="text-7xl">🛒</div>
+    <h1 class="font-display text-3xl font-bold uppercase text-maroon mt-4">Keranjangmu masih kosong</h1>
+    <p class="text-ink/60 mt-2">Yuk, cari merch Cortis favoritmu!</p>
+    <a href="#/katalog" class="btn-primary inline-block mt-6 px-7 py-3 rounded-full text-sm font-semibold">Lihat Katalog</a>
+  </section>`;
+}
+
+/* ==========================================================
+   HALAMAN BERANDA
+   ========================================================== */
+function renderHome() {
+  return `
+  <section class="fade-in relative overflow-hidden rounded-[2rem] bg-blush/40 border border-blush">
+    <div id="hero-track" class="flex transition-transform duration-700 ease-out">
+      ${HERO_SLIDES.map(s => `
+        <div class="min-w-full bg-gradient-to-br ${s.grad} p-8 md:p-14 grid md:grid-cols-2 gap-8 items-center">
+          <div class="order-2 md:order-1">
+            <span class="inline-block bg-white/80 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider text-maroon">${s.tag}</span>
+            <h1 class="font-display text-4xl md:text-5xl font-black leading-tight mt-4 text-ink">${s.title}</h1>
+            <p class="text-lg font-semibold text-maroon mt-2">${s.sub}</p>
+            <p class="text-sm font-bold tracking-wide text-brand mt-3">${s.variants}</p>
+            <p class="text-sm text-ink/70 mt-2">${s.note}</p>
+            <div class="mt-7 flex flex-wrap gap-3">
+              <a href="#/katalog" class="btn-primary px-7 py-3 rounded-full font-semibold text-sm">Belanja Sekarang</a>
+              <button data-action="detail" data-id="${s.target}" class="btn-ghost px-6 py-3 rounded-full font-semibold text-sm">Lihat Detail</button>
+            </div>
+          </div>
+          <div class="order-1 md:order-2 aspect-square max-w-xs md:max-w-sm mx-auto w-full rounded-3xl bg-white/60 flex items-center justify-center text-[9rem] shadow-inner animate-float">
+            ${s.emoji}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <button data-action="hero-prev" aria-label="Sebelumnya" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-maroon shadow">‹</button>
+    <button data-action="hero-next" aria-label="Berikutnya" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-maroon shadow">›</button>
+
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      ${HERO_SLIDES.map((_, i) => `<button data-action="hero-go" data-index="${i}" aria-label="Slide ${i + 1}" class="hero-dot ${i === heroIndex ? 'active' : ''}"></button>`).join('')}
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <div class="flex flex-wrap justify-center gap-6 md:gap-10">
+      ${ARTISTS.map(a => `
+        <button data-action="artist" data-name="${a.name}" class="artist-circle flex flex-col items-center gap-2 text-[11px] font-bold text-maroon">
+          <span class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-brand bg-white flex items-center justify-center text-sm font-black text-brand">${a.short}</span>
+          <span class="uppercase tracking-wide">${a.name}</span>
+        </button>
+      `).join('')}
+    </div>
+  </section>
+
+  <section class="mt-14">
+    <div class="flex items-end justify-between border-b-2 border-brand pb-2 mb-6">
+      <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon">Produk Terbaru</h2>
+      <a href="#/katalog" class="text-sm font-semibold text-brand hover:underline">Lihat semua →</a>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      ${PRODUCTS.slice(0, 4).map(productCard).join('')}
+    </div>
+  </section>
+
+  <section class="mt-16">
+    <h2 class="font-display text-2xl md:text-3xl font-bold uppercase tracking-wider text-center text-maroon">Kenapa Funstuff?</h2>
+    <p class="text-center text-ink/60 text-sm mt-2">Komitmen kami untuk setiap penggemar</p>
+    <div class="grid md:grid-cols-3 gap-6 mt-8">
+      <div class="rounded-3xl p-7 bg-blush/60 hover:-translate-y-1 transition border border-blush">
+        <div class="text-4xl">🎨</div>
+        <h3 class="font-bold text-lg mt-4 text-maroon">100% In-House IP</h3>
+        <p class="text-sm text-ink/70 mt-2 leading-relaxed">Desain orisinal yang dikembangkan tim kami sendiri, bukan sekadar cetak ulang tanpa karakter.</p>
+      </div>
+      <div class="rounded-3xl p-7 bg-mint/70 hover:-translate-y-1 transition border border-mint">
+        <div class="text-4xl">✅</div>
+        <h3 class="font-bold text-lg mt-4 text-maroon">Kontrol Kualitas</h3>
+        <p class="text-sm text-ink/70 mt-2 leading-relaxed">Setiap produk dicek sebelum dikemas agar sampai ke tanganmu dalam kondisi terbaik.</p>
+      </div>
+      <div class="rounded-3xl p-7 bg-sky/70 hover:-translate-y-1 transition border border-sky">
+        <div class="text-4xl">🔒</div>
+        <h3 class="font-bold text-lg mt-4 text-maroon">Webstore Aman</h3>
+        <p class="text-sm text-ink/70 mt-2 leading-relaxed">Data pribadi dan pembayaranmu diproses dengan sistem yang aman dan terenkripsi.</p>
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ==========================================================
+   HALAMAN KATALOG
+   ========================================================== */
+function renderCatalog() {
+  return `
+  <section class="fade-in">
+    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon">Katalog</h1>
+    <p class="text-ink/60 mt-2 mb-6">Pilih merch favoritmu. Klik <span class="font-semibold">Detail</span> untuk melihat spesifikasi lengkap.</p>
+
+    <div class="bg-white rounded-2xl border border-maroon/10 p-4 shadow-sm">
+      <input id="search-input" type="text" value="${esc(searchQuery)}" placeholder="Cari artis atau produk..." class="${inputCls}" />
+    </div>
+
+    <div class="flex flex-wrap gap-2 mt-5">
+      <button data-action="artist" data-name="ALL" class="chip rounded-full border border-maroon/20 px-4 py-1.5 text-xs font-semibold text-maroon bg-white">Semua</button>
+      ${ARTISTS.map(a => `<button data-action="artist" data-name="${a.name}" class="chip rounded-full border border-maroon/20 px-4 py-1.5 text-xs font-semibold text-maroon bg-white">${a.name}</button>`).join('')}
+    </div>
+
+    <div id="catalog-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-8"></div>
+  </section>`;
+}
+
+function drawCatalogGrid() {
+  const grid = $('#catalog-grid');
+  if (!grid) return;
+  const q = searchQuery.trim().toLowerCase();
+  const list = PRODUCTS.filter(p =>
+    (artistFilter === 'ALL' || p.artist === artistFilter) &&
+    (!q || p.name.toLowerCase().includes(q) || p.artist.toLowerCase().includes(q))
+  );
+
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.name === artistFilter);
+  });
+
+  if (!list.length) {
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-16">
+        <div class="text-6xl">🫥</div>
+        <p class="font-semibold mt-3">Produk belum tersedia</p>
+        <p class="text-sm text-ink/60">Coba kata kunci lain atau pilih artis lain.</p>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = list.map(productCard).join('');
+}
+
+/* ==========================================================
+   HALAMAN TENTANG & BANTUAN
+   ========================================================== */
+function renderAbout() {
+  return `
+  <section class="fade-in max-w-3xl mx-auto text-center">
+    <div class="text-7xl">🦊</div>
+    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mt-4">Tentang Funstuff</h1>
+    <p class="mt-4 text-ink/80 leading-relaxed">Funstuff adalah toko merch dan album resmi untuk penggemar musik di Indonesia, dengan stok yang siap kirim dari Indonesia.</p>
+
+    <div class="mt-12 text-left bg-white rounded-3xl p-8 border border-maroon/10 shadow-sm">
+      <h2 class="font-display text-xl font-bold uppercase tracking-wider text-brand text-center">Cerita Kami</h2>
+      <div class="mt-5 space-y-4 text-ink/80 leading-relaxed">
+        <p>Banyak penggemar pernah merasakan hal yang sama: album atau merch yang ditunggu ternyata harus menunggu pre-order berbulan-bulan, atau tiba dalam kondisi yang tidak diharapkan.</p>
+        <p>Dari situ Funstuff dibuat, dengan satu tujuan sederhana, yaitu membuat belanja merch resmi terasa mudah, jelas, dan bisa dipercaya.</p>
+        <p>Desain kami dikembangkan sendiri oleh tim kami (100% In-House IP), lalu setiap produk melalui kontrol kualitas sebelum dikemas. Untuk koleksi terbatas, kami membuka pre-order yang selalu kami informasikan dengan jelas.</p>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4 mt-10">
+      <div class="bg-blush/60 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">${PRODUCTS.length}+</p><p class="text-xs mt-1 font-semibold">Produk Unggulan</p></div>
+      <div class="bg-butter/70 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">100%</p><p class="text-xs mt-1 font-semibold">In-House IP</p></div>
+      <div class="bg-mint/70 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">Siap</p><p class="text-xs mt-1 font-semibold">Kirim ke seluruh ID</p></div>
+    </div>
+  </section>`;
+}
+
+function faqItem(q, a) {
+  return `
+  <details class="group bg-white rounded-xl px-5 py-4 border border-maroon/10 shadow-sm">
+    <summary class="flex items-center justify-between font-semibold text-sm text-maroon">
+      <span>${q}</span>
+      <span class="faq-icon text-2xl text-brand leading-none">+</span>
+    </summary>
+    <p class="text-sm text-ink/70 mt-3 leading-relaxed">${a}</p>
+  </details>`;
+}
+
+function renderHelp() {
+  return `
+  <section class="fade-in max-w-3xl mx-auto">
+    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon text-center">Bantuan</h1>
+
+    <div class="mt-10 bg-blush/50 border border-blush rounded-2xl p-6">
+      <h2 class="font-display text-lg font-bold uppercase tracking-wider text-brand text-center">Pembatalan Pesanan</h2>
+      <div class="mt-4 space-y-2 text-sm text-ink/80 leading-relaxed">
+        <p>Pesanan bisa dibatalkan hanya sebelum nomor resi keluar. Setelah resi keluar, pesanan tidak bisa dibatalkan.</p>
+        <p>Untuk membatalkan, hubungi CS lewat WhatsApp dan sertakan nomor pesanan (contoh: FS-2026XXXX).</p>
+      </div>
+    </div>
+
+    <h2 class="font-display text-lg font-bold uppercase tracking-wider text-brand text-center mt-12">Pertanyaan Umum</h2>
+    <div class="space-y-3 mt-6">
+      ${faqItem('Produknya ready atau pre-order?', 'Setiap produk diberi label status yang jelas: <strong>Siap Kirim</strong> (stok tersedia dan dikirim dalam 1–2 hari kerja) atau <strong>Pre-Order</strong> (sedang diproduksi, estimasi pengiriman tertera di halaman produk).')}
+      ${faqItem('Apakah album dijamin tersegel?', 'Ya. Kami memastikan album dikemas dengan rapi dan dicek kondisinya sebelum dikirim. Jika kondisi segel tidak sesuai, silakan hubungi CS kami.')}
+      ${faqItem('Bagaimana kalau barang kurang atau salah?', 'Segera hubungi CS WhatsApp kami maksimal 2x24 jam setelah barang diterima, dengan melampirkan foto produk dan kemasan.')}
+      ${faqItem('Bagaimana cara cek status pesanan?', 'Buka menu <strong>Akun</strong> setelah login. Di sana ada Riwayat Pesanan Saya beserta status masing-masing pesanan (Menunggu Pembayaran atau LUNAS / DIPROSES).')}
+      ${faqItem('Bisa membatalkan pesanan?', 'Bisa, selama nomor resi belum keluar. Lihat bagian Pembatalan Pesanan di atas untuk langkah lengkapnya.')}
+      ${faqItem('Metode pembayaran apa saja?', 'Transfer BCA, Transfer Mandiri, dan QRIS. Instruksi pembayaran muncul di halaman Invoice setelah checkout.')}
+      ${faqItem('Bagaimana cara pembayaran berjalan?', 'Selesaikan pembayaran sesuai nominal yang tertera, lalu klik <strong>Konfirmasi Pembayaran</strong>. Invoice akan langsung berstatus <strong>LUNAS</strong> dan bisa kamu cetak atau simpan sebagai PDF dari browser.')}
+    </div>
+
+    <div class="mt-10 bg-white rounded-3xl p-6 border border-maroon/10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <p class="font-bold text-maroon">Masih butuh bantuan?</p>
+        <p class="text-sm text-ink/70">Tim CS kami siap membantu via WhatsApp setiap hari.</p>
+      </div>
+      <a href="https://wa.me/6281234567890" target="_blank" rel="noopener" class="btn-primary px-6 py-3 rounded-full text-sm font-semibold">Chat CS WhatsApp</a>
+    </div>
+  </section>`;
+}
+
+/* ==========================================================
+   HALAMAN KERANJANG
+   ========================================================== */
+function renderCart() {
+  const { items, subtotal } = cartSummary();
+  if (!items.length) return emptyCartView();
+
+  const discount = calcDiscount(subtotal);
+  const estTotal = Math.max(0, subtotal - discount);
+
+  return `
+  <section class="fade-in">
+    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mb-8">Keranjang</h1>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm overflow-hidden">
+          <div class="hidden sm:grid grid-cols-12 gap-4 px-6 py-4 bg-blush/40 text-xs font-bold uppercase tracking-wide text-maroon">
+            <div class="col-span-6">Produk</div>
+            <div class="col-span-2 text-center">Harga</div>
+            <div class="col-span-2 text-center">Jumlah</div>
+            <div class="col-span-2 text-right">Subtotal</div>
+          </div>
+          <ul class="divide-y divide-maroon/10">
+            ${items.map(i => `
+            <li class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center px-6 py-5">
+              <div class="sm:col-span-6 flex items-center gap-4">
+                <button data-action="remove" data-id="${i.id}" aria-label="Hapus" class="text-maroon/50 hover:text-brand text-lg">✕</button>
+                <div class="w-16 h-16 rounded-xl bg-gradient-to-br ${i.product.grad} flex items-center justify-center text-3xl shrink-0">${i.product.emoji}</div>
+                <div>
+                  <p class="text-[11px] font-bold text-brand uppercase">${i.product.artist}</p>
+                  <p class="font-semibold text-sm leading-snug text-maroon">${i.product.name}</p>
+                </div>
+              </div>
+              <div class="sm:col-span-2 sm:text-center text-sm">${formatRp(i.product.price)}</div>
+              <div class="sm:col-span-2 flex sm:justify-center">
+                <div class="inline-flex items-center border border-maroon/20 rounded-full p-1">
+                  <button data-action="qty" data-id="${i.id}" data-delta="-1" class="w-8 h-8 rounded-full font-bold hover:bg-blush">−</button>
+                  <span class="w-10 text-center font-semibold">${i.qty}</span>
+                  <button data-action="qty" data-id="${i.id}" data-delta="1" class="w-8 h-8 rounded-full font-bold hover:bg-blush">+</button>
+                </div>
+              </div>
+              <div class="sm:col-span-2 sm:text-right font-bold text-sm text-brand">${formatRp(i.product.price * i.qty)}</div>
+            </li>`).join('')}
+          </ul>
+        </div>
+
+        <div class="mt-4 bg-white rounded-2xl border border-maroon/10 p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          ${coupon ? `
+            <div class="flex items-center justify-between w-full bg-mint/60 rounded-xl px-4 py-3 text-sm">
+              <span><strong>${esc(coupon.code)}</strong> · ${coupon.label}</span>
+              <button data-action="remove-coupon" class="text-brand text-xs font-semibold">Hapus</button>
+            </div>` : `
+            <form id="coupon-form" class="flex gap-2 w-full sm:w-auto">
+              <input id="coupon-input" type="text" placeholder="Kode kupon" class="${inputCls} uppercase sm:w-64" />
+              <button type="submit" class="btn-primary px-5 rounded-full text-sm font-semibold whitespace-nowrap">Terapkan Kupon</button>
+            </form>
+            <p class="text-[11px] text-ink/50">Coba: COERFUN10 atau FUNSTUFF15K</p>`}
+        </div>
+      </div>
+
+      <aside class="bg-white rounded-2xl border border-maroon/10 shadow-sm h-fit overflow-hidden">
+        <div class="bg-blush/40 px-6 py-4">
+          <h2 class="font-display text-xl font-bold uppercase tracking-wide text-maroon">Total Keranjang</h2>
+        </div>
+        <div class="p-6 space-y-4 text-sm">
+          <div class="flex justify-between"><span class="text-ink/60">Subtotal</span><span>${formatRp(subtotal)}</span></div>
+          <div class="flex justify-between"><span class="text-ink/60">Diskon</span><span class="text-emerald-600">${discount ? '-' + formatRp(discount) : 'Rp0'}</span></div>
+          <div class="flex justify-between"><span class="text-ink/60">Ongkir</span><span class="text-ink/60 text-xs text-right">Dihitung di halaman checkout<br/>(gratis untuk DKI Jakarta)</span></div>
+          <div class="flex justify-between text-base font-extrabold pt-4 border-t border-maroon/10">
+            <span>Estimasi Total</span><span class="text-brand">${formatRp(estTotal)}</span>
+          </div>
+          <a href="#/checkout" class="btn-primary block text-center w-full py-3 rounded-full font-semibold text-sm">Proses ke Checkout</a>
+        </div>
+      </aside>
+    </div>
+  </section>`;
+}
+
+/* ==========================================================
+   HALAMAN CHECKOUT
+   ========================================================== */
+function renderCheckout() {
+  const { items } = cartSummary();
+  if (!items.length) return emptyCartView();
+
+  const user = currentUser();
+  const prefillName = user ? esc(user.name) : '';
+
+  return `
+  <section class="fade-in">
+    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon">Checkout</h1>
+    <p class="text-ink/60 mt-2 mb-8">Lengkapi data pengiriman, pilih kurir, lalu pilih metode pembayaran.</p>
+
+    <form id="checkout-form" class="grid lg:grid-cols-3 gap-8" novalidate>
+      <div class="lg:col-span-2 space-y-6">
+
+        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-6">
+          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-brand mb-5">1. Data Penerima</h2>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <label class="${labelCls}" for="ck-name">Nama Penerima</label>
+              <input id="ck-name" name="name" type="text" required value="${prefillName}" class="${inputCls}" />
+            </div>
+            <div>
+              <label class="${labelCls}" for="ck-phone">Nomor WhatsApp</label>
+              <input id="ck-phone" name="phone" type="tel" required placeholder="081234567890" class="${inputCls}" />
+            </div>
+            <div>
+              <label class="${labelCls}" for="ck-province">Provinsi</label>
+              <select id="ck-province" name="province" class="${inputCls}">
+                ${PROVINCES.map(p => `<option ${p === 'DKI Jakarta' ? 'selected' : ''}>${p}</option>`).join('')}
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="${labelCls}" for="ck-address">Alamat Lengkap</label>
+              <textarea id="ck-address" name="address" rows="3" required placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan, kota, kode pos" class="${inputCls}"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-6">
+          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-brand mb-5">2. Pilihan Kurir</h2>
+          <div class="grid sm:grid-cols-3 gap-4">
+            ${Object.entries(COURIERS).map(([key, c], i) => `
+            <label class="cursor-pointer">
+              <input type="radio" name="courier" value="${esc(key)}" class="peer sr-only" ${i === 0 ? 'checked' : ''} />
+              <div class="rounded-2xl border-2 border-maroon/10 p-4 transition peer-checked:border-brand peer-checked:bg-blush/40 peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40">
+                <p class="font-bold text-maroon">${esc(key)}</p>
+                <p class="text-xs text-ink/60 mt-1">Estimasi ${c.eta}</p>
+                <p class="text-xs mt-2 font-semibold">Luar DKI: ${formatRp(c.fee)}</p>
+              </div>
+            </label>`).join('')}
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-6">
+          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-brand mb-5">3. Metode Pembayaran</h2>
+          <div class="grid sm:grid-cols-3 gap-4">
+            ${Object.entries(PAYMENTS).map(([key, p], i) => `
+            <label class="cursor-pointer">
+              <input type="radio" name="payment" value="${key}" class="peer sr-only" ${i === 0 ? 'checked' : ''} />
+              <div class="rounded-2xl border-2 border-maroon/10 p-4 transition peer-checked:border-brand peer-checked:bg-blush/40 peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40">
+                <p class="font-bold text-maroon">${p.label}</p>
+                <p class="text-xs text-ink/60 mt-1">${p.type === 'qris' ? 'Scan dengan e-wallet/m-banking' : 'Transfer ke rekening resmi'}</p>
+              </div>
+            </label>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <aside class="bg-white rounded-2xl border border-maroon/10 shadow-sm h-fit overflow-hidden">
+        <div class="bg-blush/40 px-6 py-4">
+          <h2 class="font-display text-xl font-bold uppercase tracking-wide text-maroon">Ringkasan</h2>
+        </div>
+        <div class="p-6 space-y-4 text-sm">
+          <ul class="space-y-3">
+            ${items.map(i => `
+              <li class="flex justify-between gap-3">
+                <span class="text-ink/80">${esc(i.product.name)} <span class="text-ink/50">× ${i.qty}</span></span>
+                <span class="shrink-0">${formatRp(i.product.price * i.qty)}</span>
+              </li>`).join('')}
+          </ul>
+          <div id="checkout-totals" class="space-y-3 border-t border-maroon/10 pt-4"></div>
+          <button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold text-sm">Buat Pesanan</button>
+          <a href="#/keranjang" class="block text-center text-xs text-brand hover:underline">← Kembali ke keranjang</a>
+        </div>
+      </aside>
+    </form>
+  </section>`;
+}
+
+function drawCheckoutTotals() {
+  const form = $('#checkout-form');
+  const box = $('#checkout-totals');
+  if (!form || !box) return;
+  const fd = new FormData(form);
+  const { subtotal } = cartSummary();
+  const discount = calcDiscount(subtotal);
+  const courier = fd.get('courier') || 'JNE';
+  const shipping = calcShipping(fd.get('province'), courier);
+  const total = Math.max(0, subtotal - discount) + shipping;
+
+  box.innerHTML = `
+    <div class="flex justify-between"><span class="text-ink/60">Subtotal</span><span>${formatRp(subtotal)}</span></div>
+    <div class="flex justify-between"><span class="text-ink/60">Diskon${coupon ? ' (' + esc(coupon.code) + ')' : ''}</span><span class="text-emerald-600">${discount ? '-' + formatRp(discount) : 'Rp0'}</span></div>
+    <div class="flex justify-between"><span class="text-ink/60">Ongkir (${esc(courier)})</span><span>${shipping === 0 ? '<span class="text-emerald-600 font-semibold">Gratis</span>' : formatRp(shipping)}</span></div>
+    <div class="flex justify-between text-base font-extrabold pt-3 border-t border-maroon/10"><span>Total Tagihan</span><span class="text-brand">${formatRp(total)}</span></div>`;
+}
+
+function handleCheckoutSubmit(form) {
+  const fd = new FormData(form);
+  const name = String(fd.get('name') || '').trim();
+  const phone = String(fd.get('phone') || '').replace(/[\s-]/g, '');
+  const address = String(fd.get('address') || '').trim();
+  const province = fd.get('province');
+  const courier = fd.get('courier');
+  const paymentKey = fd.get('payment');
+
+  if (!name) return showToast('Nama penerima wajib diisi');
+  if (!/^(\+?62|0)8\d{7,11}$/.test(phone)) return showToast('Nomor WhatsApp tidak valid, contoh: 081234567890');
+  if (address.length < 10) return showToast('Alamat lengkap wajib diisi (minimal 10 karakter)');
+  if (!COURIERS[courier]) return showToast('Pilih kurir terlebih dahulu');
+  if (!PAYMENTS[paymentKey]) return showToast('Pilih metode pembayaran terlebih dahulu');
+
+  const { items, subtotal } = cartSummary();
+  if (!items.length) return showToast('Keranjang kosong');
+
+  const discount = calcDiscount(subtotal);
+  const shipping = calcShipping(province, courier);
+  const total = Math.max(0, subtotal - discount) + shipping;
+
+  const orders = getOrders();
+  let id;
+  do {
+    id = 'FS-2026' + String(Math.floor(1000 + Math.random() * 9000));
+  } while (orders.some(o => o.id === id));
+
+  const user = currentUser();
+  const order = {
+    id,
+    createdAt: new Date().toISOString(),
+    paidAt: null,
+    user: user ? user.username : null,
+    customer: { name, phone, address, province },
+    courier,
+    paymentKey,
+    payment: PAYMENTS[paymentKey].label,
+    items: items.map(i => ({
+      id: i.id, name: i.product.name, artist: i.product.artist,
+      price: i.product.price, qty: i.qty, emoji: i.product.emoji
+    })),
+    subtotal, discount, couponCode: coupon ? coupon.code : null,
+    shipping, total,
+    status: STATUS_UNPAID,
+    purchaseTracked: false
+  };
+
+  orders.unshift(order);
+  setOrders(orders);
+
+  cart = [];
+  coupon = null;
+  saveCart();
+
+  location.hash = '#/invoice/' + order.id;
+}
+
+/* ==========================================================
+   PEMBAYARAN OTOMATIS -> STATUS LUNAS
+   Dipicu saat tombol "Konfirmasi Pembayaran" diklik.
+   Status langsung LUNAS, tersimpan di localStorage (dan
+   tampil di Riwayat Pesanan), lalu GA4 purchase dikirim
+   tepat satu kali per pesanan.
+   ========================================================== */
+function markPaid(id) {
+  const orders = getOrders();
+  const order = orders.find(o => o.id === id);
+  if (!order || order.status === STATUS_PAID) return;
+
+  order.status = STATUS_PAID;
+  order.paidAt = new Date().toISOString();
+  setOrders(orders);
+
+  if (!order.purchaseTracked) {
+    trackEvent('purchase', {
+      transaction_id: order.id,
+      value: order.total,
+      currency: 'IDR',
+      tax: 0,
+      shipping: order.shipping,
+      coupon: order.couponCode || '',
+      items: order.items.map(i => ({
+        item_id: i.id,
+        item_name: i.name,
+        item_category: i.artist,
+        price: i.price,
+        quantity: i.qty
+      }))
+    });
+    order.purchaseTracked = true;
+    setOrders(orders);
+  }
+
+  render();
+  showToast('Pembayaran terkonfirmasi! Invoice lunas sudah diterbitkan');
+}
+
+/* ==========================================================
+   HALAMAN INVOICE / E-RECEIPT
+   ========================================================== */
+function renderInvoice(id) {
+  const order = getOrders().find(o => o.id === id);
+  if (!order) return renderNotFound();
+
+  const paid = order.status === STATUS_PAID;
+  const pay = PAYMENTS[order.paymentKey] || {};
+
+  const paymentDetail = pay.type === 'qris' ? `
+      <p class="font-bold text-maroon">Pembayaran QRIS</p>
+      <p class="text-sm text-ink/80 mt-1">Scan kode QRIS di bawah menggunakan aplikasi e-wallet atau m-banking. Pastikan nominal sesuai: <strong>${formatRp(order.total)}</strong>.</p>
+      <div class="mt-5 w-48 h-48 mx-auto bg-white border-2 border-maroon/20 rounded-2xl grid place-items-center text-center p-4">
+        <div>
+          <div class="text-5xl">📱</div>
+          <p class="text-xs font-bold text-maroon mt-2">QRIS FUNSTUFF</p>
+          <p class="text-[10px] text-ink/50">Ganti dengan gambar QRIS asli</p>
+        </div>
+      </div>` : `
+      <p class="font-bold text-maroon">${esc(pay.label)}</p>
+      <p class="text-sm text-ink/80 mt-1">Transfer tepat sebesar <strong>${formatRp(order.total)}</strong> ke rekening berikut:</p>
+      <div class="mt-4 bg-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-maroon/10">
+        <div>
+          <p class="text-xs text-ink/60">Nomor rekening ${esc(pay.label.replace('Transfer ', ''))}</p>
+          <p class="font-mono text-lg font-bold text-maroon tracking-wider">${esc(pay.number)}</p>
+          <p class="text-xs text-ink/60">a.n. ${esc(pay.holder)}</p>
+        </div>
+        <button data-action="copy" data-value="${esc(pay.number)}" class="btn-ghost rounded-full px-4 py-2 text-xs font-semibold self-start sm:self-auto no-print">Salin nomor</button>
+      </div>`;
+
+  const paymentInstruction = `
+      <div class="bg-butter/60 rounded-2xl p-6 border border-butter no-print">
+        <p class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-3">Instruksi Pembayaran</p>
+        ${paymentDetail}
+        <p class="text-sm text-ink/80 mt-4">Silakan selesaikan pembayaran sesuai nominal di atas, lalu klik tombol <strong>'Konfirmasi Pembayaran'</strong> di bawah ini untuk menerbitkan Invoice Lunas secara otomatis.</p>
+      </div>`;
+
+  const header = paid ? `
+      <div class="bg-emerald-600 text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-widest opacity-90">Invoice Pembayaran Lunas - Funstuff</p>
+          <h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1>
+          <p class="text-sm opacity-90 mt-1">Transaksi: ${formatDate(order.createdAt)}</p>
+          <p class="text-sm opacity-90">Dibayar: ${formatDate(order.paidAt)}</p>
+        </div>
+        <span class="self-start md:self-auto text-xs font-bold px-3 py-1.5 rounded-full bg-white text-emerald-700">${STATUS_PAID}</span>
+      </div>` : `
+      <div class="bg-brand text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-widest opacity-80">Invoice Pembayaran - Funstuff</p>
+          <h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1>
+          <p class="text-sm opacity-80 mt-1">${formatDate(order.createdAt)}</p>
+        </div>
+        <span class="self-start md:self-auto text-xs font-bold px-3 py-1.5 rounded-full bg-white text-maroon">${esc(order.status)}</span>
+      </div>`;
+
+  const stampBlock = paid ? `
+      <div class="stamp absolute top-40 right-6 md:right-12 border-4 border-emerald-600 text-emerald-600 font-display font-black text-2xl uppercase px-4 py-1 rounded-xl opacity-90 pointer-events-none">
+        LUNAS
+      </div>` : '';
+
+  const actions = paid ? `
+        <div class="flex flex-col sm:flex-row gap-3 no-print">
+          <button data-action="print" class="btn-success flex-1 py-3 rounded-full font-semibold text-sm">🖨️ Cetak / Simpan Invoice</button>
+          <a href="#/akun" class="btn-ghost flex-1 text-center py-3 rounded-full font-semibold text-sm">Riwayat Pesanan</a>
+          <a href="#/katalog" class="btn-ghost flex-1 text-center py-3 rounded-full font-semibold text-sm">Belanja Lagi</a>
+        </div>` : `
+        <div class="flex flex-col sm:flex-row gap-3 no-print">
+          <button data-action="confirm-payment" data-id="${esc(order.id)}" class="btn-primary flex-1 py-3 rounded-full font-semibold text-sm">Konfirmasi Pembayaran</button>
+          <a href="#/akun" class="btn-ghost flex-1 text-center py-3 rounded-full font-semibold text-sm">Riwayat Pesanan</a>
+        </div>`;
+
+  return `
+  <section class="fade-in max-w-3xl mx-auto">
+    <div id="print-area" class="relative bg-white rounded-3xl border border-maroon/10 shadow-sm overflow-hidden">
+      ${header}
+      ${stampBlock}
+
+      <div class="p-6 md:p-10 space-y-8">
+        <div class="grid md:grid-cols-2 gap-6 text-sm">
+          <div>
+            <p class="font-bold text-maroon mb-1">Data Penerima</p>
+            <p class="font-semibold">${esc(order.customer.name)}</p>
+            <p>${esc(order.customer.phone)}</p>
+            <p class="text-ink/70 mt-1">${esc(order.customer.address)}, ${esc(order.customer.province)}</p>
+          </div>
+          <div>
+            <p class="font-bold text-maroon mb-1">Pengiriman & Pembayaran</p>
+            <p>Kurir: <strong>${esc(order.courier)}</strong></p>
+            <p>Metode: <strong>${esc(order.payment)}</strong></p>
+            <p>Status: ${paid
+              ? '<strong class="text-emerald-600">LUNAS (Terverifikasi Otomatis)</strong>'
+              : '<strong class="text-amber-600">Menunggu Pembayaran</strong>'}</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-blush/40 text-left text-xs uppercase tracking-wide text-maroon">
+                <th class="px-4 py-3">Produk</th>
+                <th class="px-4 py-3 text-center">Qty</th>
+                <th class="px-4 py-3 text-right">Harga Satuan</th>
+                <th class="px-4 py-3 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-maroon/10">
+              ${order.items.map(i => `
+                <tr>
+                  <td class="px-4 py-3">
+                    <p class="text-[11px] font-bold text-brand uppercase">${esc(i.artist)}</p>
+                    <p class="font-semibold text-maroon">${esc(i.name)}</p>
+                  </td>
+                  <td class="px-4 py-3 text-center">${i.qty}</td>
+                  <td class="px-4 py-3 text-right">${formatRp(i.price)}</td>
+                  <td class="px-4 py-3 text-right font-semibold">${formatRp(i.price * i.qty)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ml-auto w-full md:w-80 space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-ink/60">Subtotal</span><span>${formatRp(order.subtotal)}</span></div>
+          <div class="flex justify-between"><span class="text-ink/60">Diskon${order.couponCode ? ' (' + esc(order.couponCode) + ')' : ''}</span><span class="text-emerald-600">${order.discount ? '-' + formatRp(order.discount) : 'Rp0'}</span></div>
+          <div class="flex justify-between"><span class="text-ink/60">Ongkos Kirim</span><span>${order.shipping === 0 ? '<span class="text-emerald-600 font-semibold">Gratis</span>' : formatRp(order.shipping)}</span></div>
+          <div class="flex justify-between text-base font-extrabold pt-3 border-t border-maroon/10">
+            <span>${paid ? 'Total Dibayar' : 'Total Tagihan'}</span>
+            <span class="text-brand">${formatRp(order.total)}</span>
+          </div>
+        </div>
+
+        ${paid ? '' : paymentInstruction}
+
+        ${actions}
+      </div>
+    </div>
+  </section>`;
+}
+
+function copyText(text) {
+  if (!navigator.clipboard) return showToast('Salin nomor secara manual');
+  navigator.clipboard.writeText(text)
+    .then(() => showToast('Nomor rekening disalin'))
+    .catch(() => showToast('Gagal menyalin, salin manual'));
+}
+
+/* ==========================================================
+   HALAMAN AKUN (LOGIN / REGISTRASI / PROFIL)
+   ========================================================== */
+function renderAccount() {
+  const user = currentUser();
+  return user ? renderProfile(user) : renderAuthForms();
+}
+
+function renderAuthForms() {
+  const isLogin = authMode === 'login';
+  const tabCls = active => `flex-1 py-2 rounded-full text-sm font-semibold transition ${active ? 'bg-white shadow text-brand' : 'text-maroon/60'}`;
+
+  return `
+  <section class="fade-in max-w-md mx-auto bg-white rounded-3xl p-8 shadow-sm border border-maroon/10">
+    <div class="text-center mb-6">
+      <div class="text-5xl">🦊</div>
+      <h1 class="font-display text-2xl font-bold uppercase tracking-wide text-maroon mt-2">${isLogin ? 'Login' : 'Registrasi'}</h1>
+      <p class="text-sm text-ink/60">${isLogin ? 'Masuk untuk melihat riwayat pesananmu' : 'Buat akun baru untuk Coer'}</p>
+    </div>
+
+    <div class="flex bg-blush/50 rounded-full p-1 mb-6">
+      <button data-action="auth-mode" data-mode="login" class="${tabCls(isLogin)}">Masuk</button>
+      <button data-action="auth-mode" data-mode="register" class="${tabCls(!isLogin)}">Daftar</button>
+    </div>
+
+    <form id="auth-form" class="space-y-4" novalidate>
+      ${isLogin ? `
+        <div>
+          <label class="${labelCls}" for="l-identity">Username atau E-mail</label>
+          <input id="l-identity" name="identity" type="text" required class="${inputCls}" />
+        </div>
+        <div>
+          <label class="${labelCls}" for="l-password">Kata sandi</label>
+          <input id="l-password" name="password" type="password" required minlength="6" class="${inputCls}" />
+        </div>
+        <label class="flex items-center gap-2 text-xs text-ink/70">
+          <input type="checkbox" name="remember" checked class="accent-brand" /> Keep me signed in
+        </label>
+        <button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold text-sm">Masuk</button>
+      ` : `
+        <div>
+          <label class="${labelCls}" for="r-name">Nama Lengkap</label>
+          <input id="r-name" name="name" type="text" required class="${inputCls}" />
+        </div>
+        <div>
+          <label class="${labelCls}" for="r-username">Username</label>
+          <input id="r-username" name="username" type="text" required placeholder="3–20 karakter" class="${inputCls}" />
+        </div>
+        <div>
+          <label class="${labelCls}" for="r-email">E-mail</label>
+          <input id="r-email" name="email" type="email" required class="${inputCls}" />
+        </div>
+        <div>
+          <label class="${labelCls}" for="r-password">Kata sandi</label>
+          <input id="r-password" name="password" type="password" required minlength="6" placeholder="Minimal 6 karakter" class="${inputCls}" />
+        </div>
+        <div>
+          <label class="${labelCls}" for="r-confirm">Konfirmasi kata sandi</label>
+          <input id="r-confirm" name="confirm" type="password" required minlength="6" class="${inputCls}" />
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold text-sm">Daftar Sekarang</button>
+      `}
+    </form>
+  </section>`;
+}
+
+function renderProfile(user) {
+  const orders = getOrders().filter(o => o.user === user.username);
+  const paidOrders = orders.filter(o => o.status === STATUS_PAID);
+  const totalSpent = paidOrders.reduce((s, o) => s + o.total, 0);
+
+  return `
+  <section class="fade-in space-y-8">
+    <div class="bg-white rounded-3xl border border-maroon/10 shadow-sm p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-brand text-white text-2xl font-black flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</div>
+        <div>
+          <p class="font-display text-2xl font-bold text-maroon">${esc(user.name)}</p>
+          <p class="text-sm text-ink/70">@${esc(user.username)} · ${esc(user.email)}</p>
+        </div>
+      </div>
+      <button data-action="logout" class="btn-ghost px-6 py-2.5 rounded-full text-sm font-semibold self-start md:self-auto">Logout</button>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4">
+      <div class="bg-blush/60 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">${orders.length}</p><p class="text-xs mt-1 font-semibold">Total Pesanan</p></div>
+      <div class="bg-emerald-100 rounded-2xl p-6"><p class="font-display text-3xl font-black text-emerald-700">${paidOrders.length}</p><p class="text-xs mt-1 font-semibold">Pesanan Lunas</p></div>
+      <div class="bg-mint/70 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">${formatRp(totalSpent)}</p><p class="text-xs mt-1 font-semibold">Total Belanja (Lunas)</p></div>
+    </div>
+
+    <div>
+      <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon border-b-2 border-brand pb-2 mb-6">Riwayat Pesanan Saya</h2>
+      ${orders.length ? `
+        <div class="space-y-4">
+          ${orders.map(o => `
+            <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <p class="font-display font-bold text-maroon">#${esc(o.id)}</p>
+                <p class="text-xs text-ink/60">${formatDate(o.createdAt)} · ${o.items.reduce((s, i) => s + i.qty, 0)} item · ${esc(o.payment)}</p>
+                <p class="text-sm mt-1 text-ink/80 line-clamp-1">${o.items.map(i => esc(i.name)).join(', ')}</p>
+              </div>
+              <div class="flex items-center gap-4 md:gap-6 flex-wrap">
+                <span class="text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap ${orderStatusBadge(o.status)}">${esc(o.status)}</span>
+                <p class="font-bold text-brand whitespace-nowrap">${formatRp(o.total)}</p>
+                <a href="#/invoice/${esc(o.id)}" class="btn-ghost px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Lihat Invoice</a>
+              </div>
+            </div>`).join('')}
+        </div>` : `
+        <div class="text-center py-12 bg-white rounded-2xl border border-dashed border-maroon/20">
+          <div class="text-5xl">🧾</div>
+          <p class="font-semibold mt-3">Belum ada pesanan</p>
+          <p class="text-sm text-ink/60 mt-1">Pesananmu akan muncul di sini setelah checkout.</p>
+          <a href="#/katalog" class="btn-primary inline-block mt-5 px-6 py-2.5 rounded-full text-sm font-semibold">Mulai Belanja</a>
+        </div>`}
+    </div>
+  </section>`;
+}
+
+function handleLogin(fd) {
+  const identity = String(fd.get('identity') || '').trim().toLowerCase();
+  const password = String(fd.get('password') || '');
+  const user = getUsers().find(u =>
+    (u.username.toLowerCase() === identity || u.email.toLowerCase() === identity) && u.password === password
+  );
+  if (!user) return showToast('Username/e-mail atau kata sandi salah');
+
+  setSession(user.username, fd.get('remember') === 'on');
+  updateAccountLink();
+  showToast(`Selamat datang kembali, ${user.name}!`);
+  render();
+}
+
+function handleRegister(fd) {
+  const name = String(fd.get('name') || '').trim();
+  const username = String(fd.get('username') || '').trim();
+  const email = String(fd.get('email') || '').trim().toLowerCase();
+  const password = String(fd.get('password') || '');
+  const confirm = String(fd.get('confirm') || '');
+
+  if (!name) return showToast('Nama lengkap wajib diisi');
+  if (!/^[a-zA-Z0-9_.]{3,20}$/.test(username)) return showToast('Username 3–20 karakter (huruf, angka, titik, garis bawah)');
+  if (!/^\S+@\S+\.\S+$/.test(email)) return showToast('Format e-mail tidak valid');
+  if (password.length < 6) return showToast('Kata sandi minimal 6 karakter');
+  if (password !== confirm) return showToast('Konfirmasi kata sandi tidak cocok');
+
+  const users = getUsers();
+  if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) return showToast('Username sudah dipakai');
+  if (users.some(u => u.email.toLowerCase() === email)) return showToast('E-mail sudah terdaftar');
+
+  users.push({ name, username, email, password, createdAt: new Date().toISOString() });
+  setUsers(users);
+  setSession(username, true);
+  updateAccountLink();
+  showToast(`Akun berhasil dibuat. Selamat datang, ${name}!`);
+  render();
+}
+
+function renderNotFound() {
+  return `
+  <section class="text-center py-20">
+    <div class="text-7xl">🫠</div>
+    <h1 class="font-display text-3xl font-bold uppercase text-maroon mt-4">Halaman tidak ditemukan</h1>
+    <a href="#/beranda" class="btn-primary inline-block mt-6 px-7 py-3 rounded-full text-sm font-semibold">Kembali ke Beranda</a>
+  </section>`;
+}
+
+/* ==========================================================
+   CAROUSEL
+   ========================================================== */
+function heroGo(i) {
+  heroIndex = (i + HERO_SLIDES.length) % HERO_SLIDES.length;
+  const track = $('#hero-track');
+  if (track) track.style.transform = `translateX(-${heroIndex * 100}%)`;
+  document.querySelectorAll('.hero-dot').forEach((d, k) => d.classList.toggle('active', k === heroIndex));
+}
+
+setInterval(() => {
+  if ($('#hero-track')) heroGo(heroIndex + 1);
+}, 5000);
+
+/* ==========================================================
+   ROUTER (SPA feel, hash-based)
+   ========================================================== */
+const routes = {
+  beranda:   () => renderHome(),
+  tentang:   () => renderAbout(),
+  bantuan:   () => renderHelp(),
+  katalog:   () => renderCatalog(),
+  keranjang: () => renderCart(),
+  checkout:  () => renderCheckout(),
+  invoice:   id => renderInvoice(id),
+  akun:      () => renderAccount()
+};
+
+function render() {
+  const { page, param } = parseRoute();
+  const view = routes[page];
+  app.innerHTML = view ? view(param) : renderNotFound();
+
+  document.querySelectorAll('[data-nav]').forEach(a => {
+    a.classList.toggle('active', a.dataset.nav === page);
+  });
+
+  if (page === 'beranda') heroGo(heroIndex);
+  if (page === 'katalog') drawCatalogGrid();
+  if (page === 'checkout') drawCheckoutTotals();
+  updateBadge();
+}
+
+function onRouteChange() {
+  $('#mobile-menu').classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  render();
+
+  const { page } = parseRoute();
+  trackEvent('page_view', {
+    page_title: document.title,
+    page_location: location.href,
+    page_path: location.hash || '#/beranda'
+  });
+
+  // GA4: begin_checkout saat pengguna masuk halaman checkout
+  if (page === 'checkout') {
+    const { items, subtotal } = cartSummary();
+    if (items.length) {
+      trackEvent('begin_checkout', {
+        currency: 'IDR',
+        value: Math.max(0, subtotal - calcDiscount(subtotal)),
+        items: items.map(i => ({
+          item_id: i.id, item_name: i.product.name, item_category: i.product.artist,
+          price: i.product.price, quantity: i.qty
+        }))
+      });
+    }
+  }
+}
+
+window.addEventListener('hashchange', onRouteChange);
+
+/* ==========================================================
+   MODAL
+   ========================================================== */
+function openModal(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  const habis = p.status === 'Stok Habis';
+  $('#modal-content').innerHTML = `
+    <div class="w-full aspect-video rounded-2xl bg-gradient-to-br ${p.grad} flex items-center justify-center text-8xl">${p.emoji}</div>
+    <span class="inline-block mt-5 text-[11px] font-bold px-3 py-1 rounded-full ${productStatusBadge(p.status)}">${p.status.toUpperCase()}</span>
+    <p class="text-[11px] font-bold text-brand uppercase mt-3">${p.artist}</p>
+    <h2 class="font-display text-xl font-bold leading-snug text-maroon">${p.name}</h2>
+    <p class="text-2xl font-bold text-brand mt-1">${formatRp(p.price)}</p>
+    <p class="text-sm text-ink/70 mt-4 leading-relaxed">${p.desc}</p>
+    <ul class="mt-4 space-y-2 text-sm">
+      ${p.specs.map(s => `<li class="flex gap-2"><span class="text-brand">✦</span>${s}</li>`).join('')}
+    </ul>
+    <button data-action="modal-add" data-id="${p.id}" ${habis ? 'disabled' : ''} class="btn-primary w-full mt-6 py-3 rounded-full font-semibold text-sm">
+      ${habis ? 'Stok Habis' : '+ Tambah ke Keranjang'}
+    </button>
+  `;
+  const modal = $('#modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  trackEvent('view_item', {
+    currency: 'IDR', value: p.price,
+    items: [{ item_id: id, item_name: p.name, price: p.price }]
+  });
+}
+
+function closeModal() {
+  const modal = $('#modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+/* ==========================================================
+   EVENT DELEGATION
+   ========================================================== */
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'modal') return closeModal();
+
+  const el = e.target.closest('[data-action]');
+  if (!el || el.disabled) return;
+  const d = el.dataset;
+
+  switch (d.action) {
+    case 'add':
+      addToCart(d.id);
+      break;
+    case 'modal-add':
+      addToCart(d.id);
+      closeModal();
+      break;
+    case 'detail':
+      openModal(d.id);
+      break;
+    case 'close-modal':
+      closeModal();
+      break;
+    case 'qty':
+      changeQty(d.id, parseInt(d.delta, 10));
+      break;
+    case 'remove':
+      removeItem(d.id);
+      break;
+    case 'remove-coupon':
+      coupon = null;
+      render();
+      showToast('Kupon dihapus');
+      break;
+    case 'auth-mode':
+      authMode = d.mode;
+      render();
+      break;
+    case 'logout':
+      clearSession();
+      updateAccountLink();
+      render();
+      showToast('Kamu sudah logout');
+      break;
+    case 'confirm-payment':
+      markPaid(d.id);
+      break;
+    case 'print':
+      window.print();
+      break;
+    case 'copy':
+      copyText(d.value);
+      break;
+    case 'hero-prev':
+      heroGo(heroIndex - 1);
+      break;
+    case 'hero-next':
+      heroGo(heroIndex + 1);
+      break;
+    case 'hero-go':
+      heroGo(parseInt(d.index, 10));
+      break;
+    case 'artist':
+      artistFilter = d.name;
+      if (parseRoute().page !== 'katalog') location.hash = '#/katalog';
+      else drawCatalogGrid();
+      break;
+  }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'search-input') {
+    searchQuery = e.target.value;
+    drawCatalogGrid();
+  }
+});
+
+document.addEventListener('change', (e) => {
+  // Perubahan provinsi, kurir, atau pembayaran di checkout cukup perbarui total
+  if (e.target.closest && e.target.closest('#checkout-form')) drawCheckoutTotals();
+});
+
+document.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+
+  if (form.id === 'coupon-form') {
+    const code = $('#coupon-input').value.trim().toUpperCase();
+    if (!code) return showToast('Masukkan kode kupon terlebih dahulu');
+    if (COUPONS[code]) {
+      coupon = { code, ...COUPONS[code] };
+      showToast(`Kupon ${code} berhasil dipakai!`);
+    } else {
+      showToast('Kode kupon tidak valid');
+    }
+    render();
+    return;
+  }
+
+  if (form.id === 'auth-form') {
+    const fd = new FormData(form);
+    if (authMode === 'login') handleLogin(fd);
+    else handleRegister(fd);
+    return;
+  }
+
+  if (form.id === 'checkout-form') {
+    handleCheckoutSubmit(form);
+  }
+});
+
+/* ==========================================================
+   MOBILE MENU & INIT
+   ========================================================== */
+$('#menu-btn').addEventListener('click', () => {
+  $('#mobile-menu').classList.toggle('hidden');
+});
+
+updateBadge();
+updateAccountLink();
+onRouteChange();
+</script>
+</body>
+</html>
