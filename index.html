@@ -35,17 +35,11 @@
           colors: {
             brand: '#b5121b',
             maroon: '#7a1014',
-            cream: '#fdf8f5',
+            cream: '#fbf6f1',
+            sand: '#f3e9e1',
             blush: '#fbd9de',
-            butter: '#fff1c4',
-            mint: '#d9f5e8',
-            sky: '#dbeeff',
             ink: '#2b1719'
-          },
-          keyframes: {
-            float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-14px)' } }
-          },
-          animation: { float: 'float 6s ease-in-out infinite' }
+          }
         }
       }
     };
@@ -57,27 +51,53 @@
 
   <style>
     html { scroll-behavior: smooth; }
+    body { background: #fbf6f1; }
+
+    /* Navigasi */
     .nav-link { position: relative; padding: 4px 0; transition: color .2s; }
     .nav-link::after { content: ""; position: absolute; left: 0; bottom: -4px; height: 2px; width: 0; background: #b5121b; transition: width .25s; border-radius: 9999px; }
     .nav-link:hover::after, .nav-link.active::after { width: 100%; }
     .nav-link.active { color: #b5121b; }
 
-    .btn-primary { background: #b5121b; color: #fff; box-shadow: 0 8px 20px -8px rgba(181,18,27,.6); transition: transform .2s, box-shadow .2s, background .2s; }
-    .btn-primary:hover { background: #9a0f17; transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(181,18,27,.7); }
+    /* Tombol */
+    .btn-primary { background: #7a1014; color: #fff; transition: transform .2s, background .2s, box-shadow .2s; }
+    .btn-primary:hover { background: #b5121b; transform: translateY(-2px); box-shadow: 0 10px 22px -10px rgba(122,16,20,.7); }
     .btn-primary:active { transform: scale(.97); }
-    .btn-primary:disabled { background: #c9a3a6; box-shadow: none; transform: none; cursor: not-allowed; }
-    .btn-ghost { background: #fff; border: 2px solid #f3c9cf; color: #7a1014; transition: background .2s, border-color .2s; }
-    .btn-ghost:hover { background: #fff3f5; border-color: #b5121b; }
-    .btn-success { background: #059669; color: #fff; box-shadow: 0 8px 20px -8px rgba(5,150,105,.6); transition: transform .2s, background .2s; }
-    .btn-success:hover { background: #047857; transform: translateY(-2px); }
+    .btn-primary:disabled { background: #d4b8bb; box-shadow: none; transform: none; cursor: not-allowed; }
+    .btn-ghost { background: #fff; border: 1.5px solid #e7d3cc; color: #7a1014; transition: background .2s, border-color .2s; }
+    .btn-ghost:hover { background: #fdf1ee; border-color: #b5121b; }
+    .btn-success { background: #047857; color: #fff; transition: transform .2s, background .2s; }
+    .btn-success:hover { background: #065f46; transform: translateY(-2px); }
 
-    .hero-dot { width: 10px; height: 10px; border-radius: 9999px; background: rgba(255,255,255,.75); transition: all .3s; }
-    .hero-dot.active { width: 28px; background: #b5121b; }
+    /* Kartu */
+    .card { background: #fff; border: 1px solid #efe2da; border-radius: 1.25rem; }
+    .product-card { transition: transform .3s ease, box-shadow .3s ease, border-color .3s; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 18px 35px -22px rgba(122,16,20,.45); border-color: #e2c9c0; }
+    .product-card:hover img { transform: scale(1.06); }
+    .product-card img { transition: transform .5s ease; }
+
+    /* Running text */
+    .marquee { overflow: hidden; white-space: nowrap; }
+    .marquee-track { display: inline-flex; animation: marquee 30s linear infinite; }
+    .marquee:hover .marquee-track { animation-play-state: paused; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* Hero */
+    .hero-dot { width: 8px; height: 8px; border-radius: 9999px; background: #d9c1b8; transition: all .35s; }
+    .hero-dot.active { width: 26px; background: #7a1014; }
+    .hero-bar { height: 3px; width: 0; background: #b5121b; border-radius: 9999px; animation: heroBar 5s linear forwards; }
+    @keyframes heroBar { from { width: 0; } to { width: 100%; } }
+    .hero-slide img { transition: transform .6s ease; }
+    .hero-slide:hover img { transform: scale(1.04) rotate(-1deg); }
+    .hero-sticker { animation: floaty 5s ease-in-out infinite; }
+    @keyframes floaty { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(-2deg); } }
 
     .artist-circle { transition: transform .2s; }
     .artist-circle:hover { transform: translateY(-3px); }
+    .artist-circle:hover .circle { background: #7a1014; color: #fff; }
+    .artist-circle .circle { transition: background .2s, color .2s; }
     .chip { transition: all .2s; }
-    .chip.active { background: #b5121b; color: #fff; border-color: #b5121b; }
+    .chip.active { background: #7a1014; color: #fff; border-color: #7a1014; }
 
     .bump { animation: bump .35s ease; }
     @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
@@ -103,15 +123,13 @@
   </style>
 </head>
 
-<body class="font-sans bg-cream text-ink min-h-screen flex flex-col">
+<body class="font-sans text-ink min-h-screen flex flex-col">
 
   <!-- ================= HEADER / NAVIGASI ================= -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-maroon/10 shadow-sm no-print">
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-maroon/10 no-print">
     <nav class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
-      <a href="#/beranda" class="flex items-center gap-2">
-        <!-- Ganti emoji dengan <img src="assets/logo" class="h-12"> jika logo sudah ada -->
-        <span class="text-3xl" aria-hidden="true">🦊</span>
-        <span class="font-display text-2xl font-black tracking-wide text-brand">FUNSTUFF</span>
+      <a href="#/beranda" class="flex items-center">
+        <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-12 w-auto object-contain" />
       </a>
 
       <ul class="hidden md:flex items-center gap-7 text-sm font-medium text-maroon">
@@ -126,7 +144,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 016 0v2"/>
           </svg>
-          <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-pink-400 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">0</span>
+          <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-brand text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">0</span>
         </a>
         <!-- Isi link akun diatur oleh JavaScript (ikon atau nama user) -->
         <a id="account-link" href="#/akun" class="flex items-center gap-2 p-1 pr-3 rounded-full text-maroon hover:bg-blush/50 transition"></a>
@@ -151,14 +169,14 @@
   <main id="app" class="flex-1 w-full max-w-6xl mx-auto px-4 py-8"></main>
 
   <!-- ================= FOOTER ================= -->
-  <footer class="bg-blush/40 border-t border-blush mt-16 no-print">
+  <footer class="bg-white border-t border-maroon/10 mt-16 no-print">
     <div class="max-w-6xl mx-auto px-4 py-12 grid gap-10 md:grid-cols-4 text-sm">
       <div>
-        <p class="font-display text-2xl font-black text-brand">🦊 FUNSTUFF</p>
+        <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-14 w-auto object-contain" />
         <p class="mt-3 text-ink/70 leading-relaxed">Toko merch dan album resmi untuk penggemar musik di Indonesia, dengan stok siap kirim.</p>
       </div>
       <div>
-        <p class="font-display font-bold text-brand uppercase tracking-wider mb-3">Menu Utama</p>
+        <p class="font-display font-bold text-maroon uppercase tracking-wider mb-3">Menu Utama</p>
         <ul class="space-y-2 text-ink/80">
           <li><a href="#/beranda" class="hover:text-brand">Beranda</a></li>
           <li><a href="#/katalog" class="hover:text-brand">Katalog</a></li>
@@ -167,26 +185,26 @@
         </ul>
       </div>
       <div>
-        <p class="font-display font-bold text-brand uppercase tracking-wider mb-3">Akun</p>
+        <p class="font-display font-bold text-maroon uppercase tracking-wider mb-3">Akun</p>
         <ul class="space-y-2 text-ink/80">
           <li><a href="#/akun" class="hover:text-brand">Akun Saya</a></li>
           <li><a href="#/keranjang" class="hover:text-brand">Keranjang</a></li>
         </ul>
       </div>
       <div>
-        <p class="font-display font-bold text-brand uppercase tracking-wider mb-3">Layanan Pelanggan</p>
+        <p class="font-display font-bold text-maroon uppercase tracking-wider mb-3">Layanan Pelanggan</p>
         <p class="text-ink/80">Email: <span class="font-medium">halo@funstuff.id</span></p>
-        <a href="https://wa.me/6281234567890" target="_blank" rel="noopener" class="btn-primary inline-block mt-4 px-5 py-2.5 rounded-full text-xs font-semibold">Chat WhatsApp CS</a>
+        <a href="https://wa.me/6288210343432?text=Halo%20Funstuff%2C%20saya%20ingin%20bertanya%20mengenai%20produk%20merchandise%20k-pop." target="_blank" rel="noopener" class="btn-primary inline-block mt-4 px-5 py-2.5 rounded-full text-xs font-semibold">Chat WhatsApp CS</a>
       </div>
     </div>
-    <div class="text-center text-xs text-ink/50 py-4 border-t border-blush">
+    <div class="text-center text-xs text-ink/50 py-4 border-t border-maroon/10">
       &copy; 2026 Fun Stuff. Fan project, bukan merchandise resmi agensi.
     </div>
   </footer>
 
   <!-- ================= FLOATING WHATSAPP ================= -->
-  <a href="https://wa.me/6281234567890" target="_blank" rel="noopener" aria-label="Contact Us via WhatsApp"
-     class="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-white shadow-lg rounded-full pl-2 pr-4 py-2 text-xs font-semibold text-ink hover:-translate-y-0.5 transition no-print">
+  <a href="https://wa.me/6288210343432?text=Halo%20Funstuff%2C%20saya%20ingin%20bertanya%20mengenai%20produk%20merchandise%20k-pop." target="_blank" rel="noopener" aria-label="Contact Us via WhatsApp"
+     class="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-white shadow-lg border border-maroon/10 rounded-full pl-2 pr-4 py-2 text-xs font-semibold text-ink hover:-translate-y-0.5 transition no-print">
     <span class="w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-sm">💬</span>
     Contact Us
   </a>
@@ -194,7 +212,7 @@
   <!-- ================= MODAL DETAIL PRODUK ================= -->
   <div id="modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-ink/40 backdrop-blur-sm p-4">
     <div class="fade-in bg-white rounded-3xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto shadow-2xl">
-      <button data-action="close-modal" aria-label="Tutup" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-blush/60 hover:bg-blush text-maroon z-10">✕</button>
+      <button data-action="close-modal" aria-label="Tutup" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-sand hover:bg-blush text-maroon z-10">✕</button>
       <div id="modal-content"></div>
     </div>
   </div>
@@ -204,77 +222,84 @@
 
 <script>
 /* ==========================================================
+   KONSTANTA
+   ========================================================== */
+const WA_NUMBER = '6288210343432';
+const WA_MESSAGE = 'Halo Funstuff, saya ingin bertanya mengenai produk merchandise k-pop.';
+const WA_URL = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)}`;
+
+/* ==========================================================
    DATA
    Foto produk diambil dari folder assets/ di repository.
    Nama file sengaja tanpa ekstensi sesuai hasil upload.
    ========================================================== */
 const ARTISTS = [
-  { name: 'CORTIS',    short: 'CRT' },
-  { name: 'ILLIT',     short: 'IL' },
-  { name: 'LNGSHOT',   short: 'LS' },
-  { name: 'NEWJEANS',  short: 'NJ' }
+  { name: 'CORTIS',   short: 'CRT' },
+  { name: 'ILLIT',    short: 'IL' },
+  { name: 'LNGSHOT',  short: 'LS' },
+  { name: 'NEWJEANS', short: 'NJ' }
 ];
 
 const PRODUCTS = [
   {
     id: 'p1', artist: 'CORTIS', name: 'Cortis Keychain Shaker (COTL Ver)', price: 80000,
-    image: 'assets/cortis shaker cotl', emoji: '🔑', grad: 'from-blush to-butter', status: 'Siap Kirim',
+    image: 'assets/cortis shaker cotl', emoji: '🔑', status: 'Siap Kirim',
     short: 'Keychain shaker edisi COTL Ver, 6x6 cm acrylic dengan ballchain.',
     desc: 'Keychain shaker edisi COTL Ver yang didesain khusus untuk Coer. Isian bergerak lembut setiap kali diguncang, cocok untuk tas, kunci, atau dipajang di meja belajar.',
     specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Ballchain sebagai gantungan', '5 pcs isian shaker ukuran ±1 cm', 'Tema resmi Coer']
   },
   {
     id: 'p2', artist: 'CORTIS', name: 'Cortis Keychain Shaker (ACAI Ver)', price: 80000,
-    image: 'assets/cortis shaker acai', emoji: '🔮', grad: 'from-sky to-blush', status: 'Siap Kirim',
+    image: 'assets/cortis shaker acai', emoji: '🔮', status: 'Siap Kirim',
     short: 'Keychain shaker edisi ACAI Ver dengan warna ungu yang estetik.',
     desc: 'Keychain shaker edisi ACAI Ver dengan warna ungu estetik. Dilengkapi 5 pcs isian shaker yang bergerak saat diguncang.',
     specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Warna ungu estetik', '5 pcs isian shaker', 'Tema resmi Coer']
   },
   {
     id: 'p3', artist: 'CORTIS', name: 'Cortis Keychain Shaker (TNT Ver)', price: 80000,
-    image: 'assets/Cortis shaker tnt', emoji: '🍃', grad: 'from-mint to-sky', status: 'Siap Kirim',
+    image: 'assets/Cortis shaker tnt', emoji: '🍃', status: 'Siap Kirim',
     short: 'Keychain shaker edisi TNT Ver dengan warna mint yang segar.',
     desc: 'Keychain shaker edisi TNT Ver dengan warna mint segar. Ringan dan mudah dibawa ke mana saja.',
     specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Warna mint segar', 'Ballchain sebagai gantungan', 'Tema resmi Coer']
   },
   {
     id: 'p4', artist: 'CORTIS', name: 'Cortis Keychain Shaker (REDRED Ver)', price: 80000,
-    image: 'assets/cortis shaker red red', emoji: '❤️', grad: 'from-pastel-red to-blush', status: 'Pre-Order',
+    image: 'assets/cortis shaker red red', emoji: '❤️', status: 'Pre-Order',
     short: 'Keychain shaker edisi REDRED Ver dengan warna merah menyala.',
     desc: 'Keychain shaker edisi REDRED Ver dengan warna merah menyala, spesial untuk Coer. Produk ini tersedia dengan sistem pre-order.',
     specs: ['Warna merah menyala', 'Edisi REDRED Ver', 'Tema resmi Coer', 'Status: Pre-Order']
   },
   {
     id: 'p5', artist: 'CORTIS', name: 'Cortis Hair Clip Set', price: 45000,
-    image: 'assets/cortis hair clip', emoji: '🎀', grad: 'from-butter to-mint', status: 'Siap Kirim',
+    image: 'assets/cortis hair clip', emoji: '🎀', status: 'Siap Kirim',
     short: 'Jepit rambut akrilik karakter Cortis yang lucu untuk outfit konser.',
     desc: 'Jepit rambut akrilik karakter Cortis yang lucu untuk melengkapi outfit konsermu.',
     specs: ['Bahan: Akrilik', 'Desain karakter Cortis', 'Cocok untuk outfit konser', 'Tema resmi Cortis']
   },
   {
     id: 'p6', artist: 'CORTIS', name: 'Cortis Enamel / Acrylic Pin', price: 35000,
-    image: 'assets/cortis pin', emoji: '📌', grad: 'from-cream to-blush', status: 'Siap Kirim',
+    image: 'assets/cortis pin', emoji: '📌', status: 'Siap Kirim',
     short: 'Pin eksklusif tema Cortis untuk tas, lanyard, atau topi.',
     desc: 'Pin eksklusif bertema Cortis untuk hiasan tas, lanyard, atau topi kesayanganmu.',
     specs: ['Tema eksklusif Cortis', 'Cocok untuk tas, lanyard, atau topi', 'Ukuran kecil dan ringan', 'Koleksi penggemar']
   },
   {
     id: 'p7', artist: 'ILLIT', name: 'ILLIT Acrylic Keychain', price: 55000,
-    image: 'assets/illit keychain', emoji: '🐰', grad: 'from-sky to-mint', status: 'Siap Kirim',
+    image: 'assets/illit keychain', emoji: '🐰', status: 'Siap Kirim',
     short: 'Gantungan kunci akrilik dua sisi dengan desain orisinal ILLIT.',
     desc: 'Gantungan kunci akrilik dua sisi dengan desain orisinal bertema ILLIT.',
     specs: ['Bahan: Akrilik', 'Desain dua sisi', 'Desain orisinal ILLIT', 'Cocok untuk tas atau kunci']
   },
   {
     id: 'p8', artist: 'LNGSHOT', name: 'LNGSHOT Exclusive Keychain', price: 55000,
-    image: 'assets/lngshot keychain', emoji: '⭐', grad: 'from-butter to-blush', status: 'Siap Kirim',
+    image: 'assets/lngshot keychain', emoji: '⭐', status: 'Siap Kirim',
     short: 'Keychain koleksi khusus penggemar LNGSHOT dengan cetakan tajam.',
     desc: 'Keychain koleksi khusus penggemar LNGSHOT dengan cetakan yang tajam dan awet.',
     specs: ['Cetakan tajam dan awet', 'Koleksi khusus penggemar LNGSHOT', 'Cocok untuk tas atau kunci', 'Tema resmi LNGSHOT']
   },
   {
     id: 'p9', artist: 'NEWJEANS', name: 'NewJeans Photocard Holder', price: 65000,
-    image: 'assets/newjeans pc holder', emoji: '💳', grad: 'from-mint to-butter', status: 'Siap Kirim',
+    image: 'assets/newjeans pc holder', emoji: '💳', status: 'Siap Kirim',
     short: 'Tempat penyimpanan photocard akrilik estetik dengan ballchain.',
     desc: 'Tempat penyimpanan photocard (CAH) akrilik yang estetik, lengkap dengan ballchain.',
     specs: ['Bahan: Akrilik', 'Untuk menyimpan photocard (CAH)', 'Dilengkapi ballchain', 'Desain estetik']
@@ -283,16 +308,14 @@ const PRODUCTS = [
 
 const HERO_SLIDES = [
   {
-    tag: 'Keychain Shaker · COTL Ver', title: 'COTL VER', sub: 'Keychain Shaker 6 x 6 cm',
-    variants: '5 pcs isian shaker', note: 'Gantungan kunci bertema Coer, siap kirim!',
-    image: 'assets/cortis shaker cotl', emoji: '🔑',
-    grad: 'from-blush via-butter to-mint', target: 'p1'
+    tag: 'Keychain Shaker', title: 'COTL VER',
+    sub: 'Keychain Shaker 6 x 6 cm', detail: '5 pcs isian shaker · Tema resmi Coer',
+    image: 'assets/cortis shaker cotl', emoji: '🔑', target: 'p1'
   },
   {
-    tag: 'Keychain Shaker · ACAI Ver', title: 'ACAI VER', sub: 'Warna ungu estetik',
-    variants: 'Edisi Cortis', note: 'Siap kirim ke seluruh Indonesia.',
-    image: 'assets/cortis shaker acai', emoji: '🔮',
-    grad: 'from-sky via-blush to-butter', target: 'p2'
+    tag: 'Keychain Shaker', title: 'ACAI VER',
+    sub: 'Warna ungu yang estetik', detail: 'Edisi Cortis · Siap kirim ke seluruh Indonesia',
+    image: 'assets/cortis shaker acai', emoji: '🔮', target: 'p2'
   }
 ];
 
@@ -370,6 +393,7 @@ let authMode = 'login';
 let artistFilter = 'ALL';
 let searchQuery = '';
 let heroIndex = 0;
+let heroPaused = false;
 
 /* ==========================================================
    HELPER
@@ -382,6 +406,7 @@ const formatDate = iso => new Date(iso).toLocaleString('id-ID', { dateStyle: 'lo
 const getProduct = id => PRODUCTS.find(p => p.id === id);
 const inputCls = 'w-full rounded-xl border border-maroon/15 bg-white px-4 py-3 text-sm transition';
 const labelCls = 'block text-sm font-semibold text-maroon mb-1';
+const mediaBg = 'bg-[#f5ece6]';
 
 /* Fallback: jika foto gagal dimuat, img diganti dengan emoji.
    Dipanggil dari atribut onerror pada tag <img>. */
@@ -452,7 +477,7 @@ function updateAccountLink() {
   const user = currentUser();
   if (user) {
     link.innerHTML = `
-      <span class="w-8 h-8 rounded-full bg-brand text-white text-xs font-bold flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</span>
+      <span class="w-8 h-8 rounded-full bg-maroon text-white text-xs font-bold flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</span>
       <span class="text-sm font-semibold text-maroon max-w-[100px] truncate">${esc(user.name.split(' ')[0])}</span>`;
     link.setAttribute('aria-label', 'Akun ' + user.name);
   } else {
@@ -514,8 +539,8 @@ function removeItem(id) {
    ========================================================== */
 function productStatusBadge(status) {
   const map = {
-    'Siap Kirim': 'bg-emerald-100 text-emerald-700',
-    'Pre-Order': 'bg-violet-100 text-violet-700',
+    'Siap Kirim': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    'Pre-Order': 'bg-violet-50 text-violet-700 border border-violet-200',
     'Stok Habis': 'bg-brand text-white'
   };
   return map[status] || 'bg-gray-100 text-gray-600';
@@ -530,15 +555,15 @@ function orderStatusBadge(status) {
 function productCard(p) {
   const habis = p.status === 'Stok Habis';
   return `
-  <article class="group bg-white rounded-2xl p-4 border border-maroon/10 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col">
-    <div class="relative aspect-square rounded-xl bg-gradient-to-br ${p.grad} overflow-hidden">
-      ${productMedia(p, 'w-full h-full object-cover group-hover:scale-110 transition duration-300')}
-      <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded-full ${productStatusBadge(p.status)} shadow-sm">${p.status.toUpperCase()}</span>
+  <article class="product-card card p-4 flex flex-col">
+    <div class="relative aspect-square rounded-2xl ${mediaBg} overflow-hidden">
+      ${productMedia(p)}
+      <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded-full ${productStatusBadge(p.status)}">${p.status.toUpperCase()}</span>
     </div>
     <p class="mt-4 text-[11px] font-semibold text-brand uppercase tracking-wider">${p.artist}</p>
     <h3 class="font-semibold leading-snug text-sm line-clamp-2 min-h-[2.5rem] mt-1">${p.name}</h3>
     <p class="text-xs text-ink/60 mt-1 line-clamp-2">${p.short}</p>
-    <p class="font-bold text-brand mt-3">${formatRp(p.price)}</p>
+    <p class="font-bold text-maroon mt-3">${formatRp(p.price)}</p>
     <div class="mt-3 grid grid-cols-2 gap-2">
       <button data-action="detail" data-id="${p.id}" class="btn-ghost rounded-full py-2 text-xs font-semibold">Detail</button>
       <button data-action="add" data-id="${p.id}" ${habis ? 'disabled' : ''} class="btn-primary rounded-full py-2 text-xs font-semibold">${habis ? 'Habis' : '+ Keranjang'}</button>
@@ -560,50 +585,78 @@ function emptyCartView() {
    HALAMAN BERANDA
    ========================================================== */
 function renderHome() {
+  const marqueeText = '✨ GUNAKAN KODE KUPON COERFUN10 UNTUK DISKON 10% ATAU FUNSTUFF15K UNTUK POTONGAN RP15.000! ✨ &nbsp;•&nbsp; STOK SIAP KIRIM DARI INDONESIA &nbsp;•&nbsp; 100% IN-HOUSE IP FANMERCH &nbsp;•&nbsp; ';
+
   return `
-  <section class="fade-in relative overflow-hidden rounded-[2rem] bg-blush/40 border border-blush">
-    <div id="hero-track" class="flex transition-transform duration-700 ease-out">
-      ${HERO_SLIDES.map(s => `
-        <div class="min-w-full bg-gradient-to-br ${s.grad} p-8 md:p-14 grid md:grid-cols-2 gap-8 items-center">
-          <div class="order-2 md:order-1">
-            <span class="inline-block bg-white/80 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider text-maroon">${s.tag}</span>
-            <h1 class="font-display text-4xl md:text-5xl font-black leading-tight mt-4 text-ink">${s.title}</h1>
-            <p class="text-lg font-semibold text-maroon mt-2">${s.sub}</p>
-            <p class="text-sm font-bold tracking-wide text-brand mt-3">${s.variants}</p>
-            <p class="text-sm text-ink/70 mt-2">${s.note}</p>
-            <div class="mt-7 flex flex-wrap gap-3">
+  <!-- RUNNING TEXT -->
+  <div class="marquee -mx-4 md:mx-0 md:rounded-full bg-maroon text-white text-xs font-semibold tracking-wider py-2.5 mb-8">
+    <div class="marquee-track">
+      <span class="px-4">${marqueeText}</span>
+      <span class="px-4">${marqueeText}</span>
+    </div>
+  </div>
+
+  <!-- HERO BANNER -->
+  <section id="hero-section" class="fade-in relative grid md:grid-cols-2 gap-8 items-center bg-white border border-maroon/10 rounded-[2rem] p-6 md:p-12 overflow-hidden select-none">
+    <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-blush/50 blur-3xl pointer-events-none"></div>
+
+    <div class="relative order-2 md:order-1">
+      <div id="hero-track" class="transition-all duration-500 ease-out">
+        ${HERO_SLIDES.map((s, i) => `
+          <div class="hero-text ${i === heroIndex ? '' : 'hidden'}">
+            <span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full bg-sand text-maroon uppercase tracking-widest">${s.tag}</span>
+            <h1 class="font-display text-5xl md:text-6xl font-black leading-[1.05] mt-5 text-maroon">${s.title}</h1>
+            <p class="text-base md:text-lg font-semibold text-ink mt-3">${s.sub}</p>
+            <p class="text-sm text-ink/60 mt-2">${s.detail}</p>
+            <div class="mt-8 flex flex-wrap gap-3">
               <a href="#/katalog" class="btn-primary px-7 py-3 rounded-full font-semibold text-sm">Belanja Sekarang</a>
               <button data-action="detail" data-id="${s.target}" class="btn-ghost px-6 py-3 rounded-full font-semibold text-sm">Lihat Detail</button>
             </div>
-          </div>
-          <div class="order-1 md:order-2 aspect-square max-w-xs md:max-w-sm mx-auto w-full rounded-3xl bg-white/60 overflow-hidden shadow-inner animate-float">
-            <img src="${esc(s.image)}" alt="${esc(s.title)}" data-emoji="${s.emoji}" class="w-full h-full object-cover" onerror="imgFail(this)" />
-          </div>
+          </div>`).join('')}
+      </div>
+
+      <div class="mt-10 flex items-center gap-5">
+        <div class="flex items-center gap-2">
+          ${HERO_SLIDES.map((_, i) => `<button data-action="hero-go" data-index="${i}" aria-label="Slide ${i + 1}" class="hero-dot ${i === heroIndex ? 'active' : ''}"></button>`).join('')}
         </div>
-      `).join('')}
+        <div class="flex items-center gap-2 ml-auto">
+          <button data-action="hero-prev" aria-label="Sebelumnya" class="w-9 h-9 rounded-full border border-maroon/20 text-maroon hover:bg-sand transition">‹</button>
+          <button data-action="hero-next" aria-label="Berikutnya" class="w-9 h-9 rounded-full border border-maroon/20 text-maroon hover:bg-sand transition">›</button>
+        </div>
+      </div>
+      <div class="mt-4 h-[3px] w-full bg-sand rounded-full overflow-hidden">
+        <div id="hero-bar" class="hero-bar"></div>
+      </div>
     </div>
 
-    <button data-action="hero-prev" aria-label="Sebelumnya" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-maroon shadow">‹</button>
-    <button data-action="hero-next" aria-label="Berikutnya" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-maroon shadow">›</button>
-
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-      ${HERO_SLIDES.map((_, i) => `<button data-action="hero-go" data-index="${i}" aria-label="Slide ${i + 1}" class="hero-dot ${i === heroIndex ? 'active' : ''}"></button>`).join('')}
+    <div class="relative order-1 md:order-2">
+      <div id="hero-media" class="relative aspect-square max-w-sm mx-auto w-full">
+        ${HERO_SLIDES.map((s, i) => `
+          <div class="hero-slide absolute inset-0 rounded-[1.75rem] ${mediaBg} overflow-hidden shadow-xl transition-all duration-500 ${i === heroIndex ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0'}">
+            <img src="${esc(s.image)}" alt="${esc(s.title)}" data-emoji="${s.emoji}" class="w-full h-full object-cover" onerror="imgFail(this)" />
+          </div>`).join('')}
+        <div class="hero-sticker absolute -bottom-4 -left-4 bg-maroon text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-lg z-20">
+          Siap Kirim 🇮🇩
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="mt-10">
+  <!-- ARTIS -->
+  <section class="mt-14">
     <div class="flex flex-wrap justify-center gap-6 md:gap-10">
       ${ARTISTS.map(a => `
         <button data-action="artist" data-name="${a.name}" class="artist-circle flex flex-col items-center gap-2 text-[11px] font-bold text-maroon">
-          <span class="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-brand bg-white flex items-center justify-center text-sm font-black text-brand">${a.short}</span>
+          <span class="circle w-16 h-16 md:w-20 md:h-20 rounded-full border border-maroon/30 bg-white flex items-center justify-center text-sm font-black text-maroon">${a.short}</span>
           <span class="uppercase tracking-wide">${a.name}</span>
         </button>
       `).join('')}
     </div>
   </section>
 
-  <section class="mt-14">
-    <div class="flex items-end justify-between border-b-2 border-brand pb-2 mb-6">
+  <!-- PRODUK TERBARU -->
+  <section class="mt-16">
+    <div class="flex items-end justify-between border-b border-maroon/20 pb-3 mb-6">
       <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon">Produk Terbaru</h2>
       <a href="#/katalog" class="text-sm font-semibold text-brand hover:underline">Lihat semua →</a>
     </div>
@@ -612,23 +665,24 @@ function renderHome() {
     </div>
   </section>
 
-  <section class="mt-16">
-    <h2 class="font-display text-2xl md:text-3xl font-bold uppercase tracking-wider text-center text-maroon">Kenapa Funstuff?</h2>
-    <p class="text-center text-ink/60 text-sm mt-2">Komitmen kami untuk setiap penggemar</p>
-    <div class="grid md:grid-cols-3 gap-6 mt-8">
-      <div class="rounded-3xl p-7 bg-blush/60 hover:-translate-y-1 transition border border-blush">
-        <div class="text-4xl">🎨</div>
-        <h3 class="font-bold text-lg mt-4 text-maroon">100% In-House IP</h3>
+  <!-- KENAPA FUNSTUFF -->
+  <section class="mt-20">
+    <p class="text-center text-xs font-bold uppercase tracking-[0.3em] text-brand">Kenapa Kami</p>
+    <h2 class="font-display text-2xl md:text-3xl font-bold uppercase tracking-wider text-center text-maroon mt-2">Kenapa Funstuff?</h2>
+    <div class="grid md:grid-cols-3 gap-6 mt-10">
+      <div class="card p-7 hover:-translate-y-1 transition">
+        <div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center text-2xl">🎨</div>
+        <h3 class="font-bold text-lg mt-5 text-maroon">100% In-House IP</h3>
         <p class="text-sm text-ink/70 mt-2 leading-relaxed">Desain orisinal yang dikembangkan tim kami sendiri, bukan sekadar cetak ulang tanpa karakter.</p>
       </div>
-      <div class="rounded-3xl p-7 bg-mint/70 hover:-translate-y-1 transition border border-mint">
-        <div class="text-4xl">✅</div>
-        <h3 class="font-bold text-lg mt-4 text-maroon">Kontrol Kualitas</h3>
+      <div class="card p-7 hover:-translate-y-1 transition">
+        <div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center text-2xl">✅</div>
+        <h3 class="font-bold text-lg mt-5 text-maroon">Kontrol Kualitas</h3>
         <p class="text-sm text-ink/70 mt-2 leading-relaxed">Setiap produk dicek sebelum dikemas agar sampai ke tanganmu dalam kondisi terbaik.</p>
       </div>
-      <div class="rounded-3xl p-7 bg-sky/70 hover:-translate-y-1 transition border border-sky">
-        <div class="text-4xl">🔒</div>
-        <h3 class="font-bold text-lg mt-4 text-maroon">Webstore Aman</h3>
+      <div class="card p-7 hover:-translate-y-1 transition">
+        <div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center text-2xl">🔒</div>
+        <h3 class="font-bold text-lg mt-5 text-maroon">Webstore Aman</h3>
         <p class="text-sm text-ink/70 mt-2 leading-relaxed">Data pribadi dan pembayaranmu diproses dengan sistem yang aman dan terenkripsi.</p>
       </div>
     </div>
@@ -644,7 +698,7 @@ function renderCatalog() {
     <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon">Katalog</h1>
     <p class="text-ink/60 mt-2 mb-6">Pilih merch favoritmu. Klik <span class="font-semibold">Detail</span> untuk melihat spesifikasi lengkap.</p>
 
-    <div class="bg-white rounded-2xl border border-maroon/10 p-4 shadow-sm">
+    <div class="card p-4">
       <input id="search-input" type="text" value="${esc(searchQuery)}" placeholder="Cari artis atau produk..." class="${inputCls}" />
     </div>
 
@@ -688,12 +742,12 @@ function drawCatalogGrid() {
 function renderAbout() {
   return `
   <section class="fade-in max-w-3xl mx-auto text-center">
-    <div class="text-7xl">🦊</div>
-    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mt-4">Tentang Funstuff</h1>
+    <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-24 w-auto object-contain mx-auto" />
+    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mt-6">Tentang Funstuff</h1>
     <p class="mt-4 text-ink/80 leading-relaxed">Funstuff adalah toko merch dan album resmi untuk penggemar musik di Indonesia, dengan stok yang siap kirim dari Indonesia.</p>
 
-    <div class="mt-12 text-left bg-white rounded-3xl p-8 border border-maroon/10 shadow-sm">
-      <h2 class="font-display text-xl font-bold uppercase tracking-wider text-brand text-center">Cerita Kami</h2>
+    <div class="mt-12 text-left card p-8">
+      <h2 class="font-display text-xl font-bold uppercase tracking-wider text-maroon text-center">Cerita Kami</h2>
       <div class="mt-5 space-y-4 text-ink/80 leading-relaxed">
         <p>Banyak penggemar pernah merasakan hal yang sama: album atau merch yang ditunggu ternyata harus menunggu pre-order berbulan-bulan, atau tiba dalam kondisi yang tidak diharapkan.</p>
         <p>Dari situ Funstuff dibuat, dengan satu tujuan sederhana, yaitu membuat belanja merch resmi terasa mudah, jelas, dan bisa dipercaya.</p>
@@ -702,16 +756,16 @@ function renderAbout() {
     </div>
 
     <div class="grid sm:grid-cols-3 gap-4 mt-10">
-      <div class="bg-blush/60 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">${PRODUCTS.length}+</p><p class="text-xs mt-1 font-semibold">Produk Unggulan</p></div>
-      <div class="bg-butter/70 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">100%</p><p class="text-xs mt-1 font-semibold">In-House IP</p></div>
-      <div class="bg-mint/70 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">Siap</p><p class="text-xs mt-1 font-semibold">Kirim ke seluruh ID</p></div>
+      <div class="card p-6"><p class="font-display text-3xl font-black text-maroon">${PRODUCTS.length}+</p><p class="text-xs mt-1 font-semibold text-ink/70">Produk Unggulan</p></div>
+      <div class="card p-6"><p class="font-display text-3xl font-black text-maroon">100%</p><p class="text-xs mt-1 font-semibold text-ink/70">In-House IP</p></div>
+      <div class="card p-6"><p class="font-display text-3xl font-black text-maroon">Siap</p><p class="text-xs mt-1 font-semibold text-ink/70">Kirim ke seluruh ID</p></div>
     </div>
   </section>`;
 }
 
 function faqItem(q, a) {
   return `
-  <details class="group bg-white rounded-xl px-5 py-4 border border-maroon/10 shadow-sm">
+  <details class="group card px-5 py-4">
     <summary class="flex items-center justify-between font-semibold text-sm text-maroon">
       <span>${q}</span>
       <span class="faq-icon text-2xl text-brand leading-none">+</span>
@@ -725,15 +779,15 @@ function renderHelp() {
   <section class="fade-in max-w-3xl mx-auto">
     <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon text-center">Bantuan</h1>
 
-    <div class="mt-10 bg-blush/50 border border-blush rounded-2xl p-6">
-      <h2 class="font-display text-lg font-bold uppercase tracking-wider text-brand text-center">Pembatalan Pesanan</h2>
+    <div class="mt-10 bg-sand border border-maroon/10 rounded-2xl p-6">
+      <h2 class="font-display text-lg font-bold uppercase tracking-wider text-maroon text-center">Pembatalan Pesanan</h2>
       <div class="mt-4 space-y-2 text-sm text-ink/80 leading-relaxed">
         <p>Pesanan bisa dibatalkan hanya sebelum nomor resi keluar. Setelah resi keluar, pesanan tidak bisa dibatalkan.</p>
         <p>Untuk membatalkan, hubungi CS lewat WhatsApp dan sertakan nomor pesanan (contoh: FS-2026XXXX).</p>
       </div>
     </div>
 
-    <h2 class="font-display text-lg font-bold uppercase tracking-wider text-brand text-center mt-12">Pertanyaan Umum</h2>
+    <h2 class="font-display text-lg font-bold uppercase tracking-wider text-maroon text-center mt-12">Pertanyaan Umum</h2>
     <div class="space-y-3 mt-6">
       ${faqItem('Produknya ready atau pre-order?', 'Setiap produk diberi label status yang jelas: <strong>Siap Kirim</strong> (stok tersedia dan dikirim dalam 1–2 hari kerja) atau <strong>Pre-Order</strong> (sedang diproduksi, estimasi pengiriman tertera di halaman produk).')}
       ${faqItem('Apakah album dijamin tersegel?', 'Ya. Kami memastikan album dikemas dengan rapi dan dicek kondisinya sebelum dikirim. Jika kondisi segel tidak sesuai, silakan hubungi CS kami.')}
@@ -744,12 +798,12 @@ function renderHelp() {
       ${faqItem('Bagaimana cara pembayaran berjalan?', 'Selesaikan pembayaran sesuai nominal yang tertera, lalu klik <strong>Konfirmasi Pembayaran</strong>. Invoice akan langsung berstatus <strong>LUNAS</strong> dan bisa kamu cetak atau simpan sebagai PDF dari browser.')}
     </div>
 
-    <div class="mt-10 bg-white rounded-3xl p-6 border border-maroon/10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="mt-10 card p-6 flex flex-col md:flex-row items-center justify-between gap-4">
       <div>
         <p class="font-bold text-maroon">Masih butuh bantuan?</p>
         <p class="text-sm text-ink/70">Tim CS kami siap membantu via WhatsApp setiap hari.</p>
       </div>
-      <a href="https://wa.me/6281234567890" target="_blank" rel="noopener" class="btn-primary px-6 py-3 rounded-full text-sm font-semibold">Chat CS WhatsApp</a>
+      <a href="${WA_URL}" target="_blank" rel="noopener" class="btn-primary px-6 py-3 rounded-full text-sm font-semibold">Chat CS WhatsApp</a>
     </div>
   </section>`;
 }
@@ -770,8 +824,8 @@ function renderCart() {
 
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">
-        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm overflow-hidden">
-          <div class="hidden sm:grid grid-cols-12 gap-4 px-6 py-4 bg-blush/40 text-xs font-bold uppercase tracking-wide text-maroon">
+        <div class="card overflow-hidden">
+          <div class="hidden sm:grid grid-cols-12 gap-4 px-6 py-4 bg-sand text-xs font-bold uppercase tracking-wide text-maroon">
             <div class="col-span-6">Produk</div>
             <div class="col-span-2 text-center">Harga</div>
             <div class="col-span-2 text-center">Jumlah</div>
@@ -782,7 +836,7 @@ function renderCart() {
             <li class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center px-6 py-5">
               <div class="sm:col-span-6 flex items-center gap-4">
                 <button data-action="remove" data-id="${i.id}" aria-label="Hapus" class="text-maroon/50 hover:text-brand text-lg">✕</button>
-                <div class="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br ${i.product.grad} shrink-0">
+                <div class="w-16 h-16 rounded-xl overflow-hidden ${mediaBg} shrink-0">
                   ${productMedia(i.product)}
                 </div>
                 <div>
@@ -793,19 +847,19 @@ function renderCart() {
               <div class="sm:col-span-2 sm:text-center text-sm">${formatRp(i.product.price)}</div>
               <div class="sm:col-span-2 flex sm:justify-center">
                 <div class="inline-flex items-center border border-maroon/20 rounded-full p-1">
-                  <button data-action="qty" data-id="${i.id}" data-delta="-1" class="w-8 h-8 rounded-full font-bold hover:bg-blush">−</button>
+                  <button data-action="qty" data-id="${i.id}" data-delta="-1" class="w-8 h-8 rounded-full font-bold hover:bg-sand">−</button>
                   <span class="w-10 text-center font-semibold">${i.qty}</span>
-                  <button data-action="qty" data-id="${i.id}" data-delta="1" class="w-8 h-8 rounded-full font-bold hover:bg-blush">+</button>
+                  <button data-action="qty" data-id="${i.id}" data-delta="1" class="w-8 h-8 rounded-full font-bold hover:bg-sand">+</button>
                 </div>
               </div>
-              <div class="sm:col-span-2 sm:text-right font-bold text-sm text-brand">${formatRp(i.product.price * i.qty)}</div>
+              <div class="sm:col-span-2 sm:text-right font-bold text-sm text-maroon">${formatRp(i.product.price * i.qty)}</div>
             </li>`).join('')}
           </ul>
         </div>
 
-        <div class="mt-4 bg-white rounded-2xl border border-maroon/10 p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div class="mt-4 card p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           ${coupon ? `
-            <div class="flex items-center justify-between w-full bg-mint/60 rounded-xl px-4 py-3 text-sm">
+            <div class="flex items-center justify-between w-full bg-emerald-50 rounded-xl px-4 py-3 text-sm">
               <span><strong>${esc(coupon.code)}</strong> · ${coupon.label}</span>
               <button data-action="remove-coupon" class="text-brand text-xs font-semibold">Hapus</button>
             </div>` : `
@@ -817,8 +871,8 @@ function renderCart() {
         </div>
       </div>
 
-      <aside class="bg-white rounded-2xl border border-maroon/10 shadow-sm h-fit overflow-hidden">
-        <div class="bg-blush/40 px-6 py-4">
+      <aside class="card h-fit overflow-hidden">
+        <div class="bg-sand px-6 py-4">
           <h2 class="font-display text-xl font-bold uppercase tracking-wide text-maroon">Total Keranjang</h2>
         </div>
         <div class="p-6 space-y-4 text-sm">
@@ -826,7 +880,7 @@ function renderCart() {
           <div class="flex justify-between"><span class="text-ink/60">Diskon</span><span class="text-emerald-600">${discount ? '-' + formatRp(discount) : 'Rp0'}</span></div>
           <div class="flex justify-between"><span class="text-ink/60">Ongkir</span><span class="text-ink/60 text-xs text-right">Dihitung di halaman checkout<br/>(gratis untuk DKI Jakarta)</span></div>
           <div class="flex justify-between text-base font-extrabold pt-4 border-t border-maroon/10">
-            <span>Estimasi Total</span><span class="text-brand">${formatRp(estTotal)}</span>
+            <span>Estimasi Total</span><span class="text-maroon">${formatRp(estTotal)}</span>
           </div>
           <a href="#/checkout" class="btn-primary block text-center w-full py-3 rounded-full font-semibold text-sm">Proses ke Checkout</a>
         </div>
@@ -853,8 +907,8 @@ function renderCheckout() {
     <form id="checkout-form" class="grid lg:grid-cols-3 gap-8" novalidate>
       <div class="lg:col-span-2 space-y-6">
 
-        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-6">
-          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-brand mb-5">1. Data Penerima</h2>
+        <div class="card p-6">
+          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-5">1. Data Penerima</h2>
           <div class="grid sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
               <label class="${labelCls}" for="ck-name">Nama Penerima</label>
@@ -877,13 +931,13 @@ function renderCheckout() {
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-6">
-          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-brand mb-5">2. Pilihan Kurir</h2>
+        <div class="card p-6">
+          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-5">2. Pilihan Kurir</h2>
           <div class="grid sm:grid-cols-3 gap-4">
             ${Object.entries(COURIERS).map(([key, c], i) => `
             <label class="cursor-pointer">
               <input type="radio" name="courier" value="${esc(key)}" class="peer sr-only" ${i === 0 ? 'checked' : ''} />
-              <div class="rounded-2xl border-2 border-maroon/10 p-4 transition peer-checked:border-brand peer-checked:bg-blush/40 peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40">
+              <div class="rounded-2xl border-2 border-maroon/10 p-4 transition peer-checked:border-maroon peer-checked:bg-sand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40">
                 <p class="font-bold text-maroon">${esc(key)}</p>
                 <p class="text-xs text-ink/60 mt-1">Estimasi ${c.eta}</p>
                 <p class="text-xs mt-2 font-semibold">Luar DKI: ${formatRp(c.fee)}</p>
@@ -892,13 +946,13 @@ function renderCheckout() {
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-6">
-          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-brand mb-5">3. Metode Pembayaran</h2>
+        <div class="card p-6">
+          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-5">3. Metode Pembayaran</h2>
           <div class="grid sm:grid-cols-3 gap-4">
             ${Object.entries(PAYMENTS).map(([key, p], i) => `
             <label class="cursor-pointer">
               <input type="radio" name="payment" value="${key}" class="peer sr-only" ${i === 0 ? 'checked' : ''} />
-              <div class="rounded-2xl border-2 border-maroon/10 p-4 transition peer-checked:border-brand peer-checked:bg-blush/40 peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40">
+              <div class="rounded-2xl border-2 border-maroon/10 p-4 transition peer-checked:border-maroon peer-checked:bg-sand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40">
                 <p class="font-bold text-maroon">${p.label}</p>
                 <p class="text-xs text-ink/60 mt-1">${p.type === 'qris' ? 'Scan dengan e-wallet/m-banking' : 'Transfer ke rekening resmi'}</p>
               </div>
@@ -907,15 +961,15 @@ function renderCheckout() {
         </div>
       </div>
 
-      <aside class="bg-white rounded-2xl border border-maroon/10 shadow-sm h-fit overflow-hidden">
-        <div class="bg-blush/40 px-6 py-4">
+      <aside class="card h-fit overflow-hidden">
+        <div class="bg-sand px-6 py-4">
           <h2 class="font-display text-xl font-bold uppercase tracking-wide text-maroon">Ringkasan</h2>
         </div>
         <div class="p-6 space-y-4 text-sm">
           <ul class="space-y-3">
             ${items.map(i => `
               <li class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br ${i.product.grad} shrink-0">
+                <div class="w-10 h-10 rounded-lg overflow-hidden ${mediaBg} shrink-0">
                   ${productMedia(i.product)}
                 </div>
                 <span class="flex-1 text-ink/80 leading-snug">${esc(i.product.name)} <span class="text-ink/50">× ${i.qty}</span></span>
@@ -946,7 +1000,7 @@ function drawCheckoutTotals() {
     <div class="flex justify-between"><span class="text-ink/60">Subtotal</span><span>${formatRp(subtotal)}</span></div>
     <div class="flex justify-between"><span class="text-ink/60">Diskon${coupon ? ' (' + esc(coupon.code) + ')' : ''}</span><span class="text-emerald-600">${discount ? '-' + formatRp(discount) : 'Rp0'}</span></div>
     <div class="flex justify-between"><span class="text-ink/60">Ongkir (${esc(courier)})</span><span>${shipping === 0 ? '<span class="text-emerald-600 font-semibold">Gratis</span>' : formatRp(shipping)}</span></div>
-    <div class="flex justify-between text-base font-extrabold pt-3 border-t border-maroon/10"><span>Total Tagihan</span><span class="text-brand">${formatRp(total)}</span></div>`;
+    <div class="flex justify-between text-base font-extrabold pt-3 border-t border-maroon/10"><span>Total Tagihan</span><span class="text-maroon">${formatRp(total)}</span></div>`;
 }
 
 function handleCheckoutSubmit(form) {
@@ -1060,12 +1114,8 @@ function renderInvoice(id) {
   const paymentDetail = pay.type === 'qris' ? `
       <p class="font-bold text-maroon">Pembayaran QRIS</p>
       <p class="text-sm text-ink/80 mt-1">Scan kode QRIS di bawah menggunakan aplikasi e-wallet atau m-banking. Pastikan nominal sesuai: <strong>${formatRp(order.total)}</strong>.</p>
-      <div class="mt-5 w-48 h-48 mx-auto bg-white border-2 border-maroon/20 rounded-2xl grid place-items-center text-center p-4">
-        <div>
-          <div class="text-5xl">📱</div>
-          <p class="text-xs font-bold text-maroon mt-2">QRIS FUNSTUFF</p>
-          <p class="text-[10px] text-ink/50">Ganti dengan gambar QRIS asli</p>
-        </div>
+      <div class="mt-5 w-56 mx-auto bg-white border border-maroon/15 rounded-2xl p-4 shadow-sm">
+        <img src="assets/qris bayar" alt="QRIS Funstuff" class="w-full h-auto object-contain" />
       </div>` : `
       <p class="font-bold text-maroon">${esc(pay.label)}</p>
       <p class="text-sm text-ink/80 mt-1">Transfer tepat sebesar <strong>${formatRp(order.total)}</strong> ke rekening berikut:</p>
@@ -1079,14 +1129,14 @@ function renderInvoice(id) {
       </div>`;
 
   const paymentInstruction = `
-      <div class="bg-butter/60 rounded-2xl p-6 border border-butter no-print">
+      <div class="bg-sand rounded-2xl p-6 border border-maroon/10 no-print">
         <p class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-3">Instruksi Pembayaran</p>
         ${paymentDetail}
         <p class="text-sm text-ink/80 mt-4">Silakan selesaikan pembayaran sesuai nominal di atas, lalu klik tombol <strong>'Konfirmasi Pembayaran'</strong> di bawah ini untuk menerbitkan Invoice Lunas secara otomatis.</p>
       </div>`;
 
   const header = paid ? `
-      <div class="bg-emerald-600 text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="bg-emerald-700 text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-widest opacity-90">Invoice Pembayaran Lunas - Funstuff</p>
           <h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1>
@@ -1095,7 +1145,7 @@ function renderInvoice(id) {
         </div>
         <span class="self-start md:self-auto text-xs font-bold px-3 py-1.5 rounded-full bg-white text-emerald-700">${STATUS_PAID}</span>
       </div>` : `
-      <div class="bg-brand text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="bg-maroon text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-widest opacity-80">Invoice Pembayaran - Funstuff</p>
           <h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1>
@@ -1122,7 +1172,7 @@ function renderInvoice(id) {
 
   return `
   <section class="fade-in max-w-3xl mx-auto">
-    <div id="print-area" class="relative bg-white rounded-3xl border border-maroon/10 shadow-sm overflow-hidden">
+    <div id="print-area" class="relative card overflow-hidden">
       ${header}
       ${stampBlock}
 
@@ -1147,7 +1197,7 @@ function renderInvoice(id) {
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="bg-blush/40 text-left text-xs uppercase tracking-wide text-maroon">
+              <tr class="bg-sand text-left text-xs uppercase tracking-wide text-maroon">
                 <th class="px-4 py-3">Produk</th>
                 <th class="px-4 py-3 text-center">Qty</th>
                 <th class="px-4 py-3 text-right">Harga Satuan</th>
@@ -1175,7 +1225,7 @@ function renderInvoice(id) {
           <div class="flex justify-between"><span class="text-ink/60">Ongkos Kirim</span><span>${order.shipping === 0 ? '<span class="text-emerald-600 font-semibold">Gratis</span>' : formatRp(order.shipping)}</span></div>
           <div class="flex justify-between text-base font-extrabold pt-3 border-t border-maroon/10">
             <span>${paid ? 'Total Dibayar' : 'Total Tagihan'}</span>
-            <span class="text-brand">${formatRp(order.total)}</span>
+            <span class="text-maroon">${formatRp(order.total)}</span>
           </div>
         </div>
 
@@ -1204,17 +1254,17 @@ function renderAccount() {
 
 function renderAuthForms() {
   const isLogin = authMode === 'login';
-  const tabCls = active => `flex-1 py-2 rounded-full text-sm font-semibold transition ${active ? 'bg-white shadow text-brand' : 'text-maroon/60'}`;
+  const tabCls = active => `flex-1 py-2 rounded-full text-sm font-semibold transition ${active ? 'bg-white shadow text-maroon' : 'text-maroon/60'}`;
 
   return `
-  <section class="fade-in max-w-md mx-auto bg-white rounded-3xl p-8 shadow-sm border border-maroon/10">
+  <section class="fade-in max-w-md mx-auto card p-8">
     <div class="text-center mb-6">
-      <div class="text-5xl">🦊</div>
-      <h1 class="font-display text-2xl font-bold uppercase tracking-wide text-maroon mt-2">${isLogin ? 'Login' : 'Registrasi'}</h1>
+      <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-16 w-auto object-contain mx-auto" />
+      <h1 class="font-display text-2xl font-bold uppercase tracking-wide text-maroon mt-4">${isLogin ? 'Login' : 'Registrasi'}</h1>
       <p class="text-sm text-ink/60">${isLogin ? 'Masuk untuk melihat riwayat pesananmu' : 'Buat akun baru untuk penggemar K-Pop'}</p>
     </div>
 
-    <div class="flex bg-blush/50 rounded-full p-1 mb-6">
+    <div class="flex bg-sand rounded-full p-1 mb-6">
       <button data-action="auth-mode" data-mode="login" class="${tabCls(isLogin)}">Masuk</button>
       <button data-action="auth-mode" data-mode="register" class="${tabCls(!isLogin)}">Daftar</button>
     </div>
@@ -1230,7 +1280,7 @@ function renderAuthForms() {
           <input id="l-password" name="password" type="password" required minlength="6" class="${inputCls}" />
         </div>
         <label class="flex items-center gap-2 text-xs text-ink/70">
-          <input type="checkbox" name="remember" checked class="accent-brand" /> Keep me signed in
+          <input type="checkbox" name="remember" checked class="accent-maroon" /> Keep me signed in
         </label>
         <button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold text-sm">Masuk</button>
       ` : `
@@ -1267,9 +1317,9 @@ function renderProfile(user) {
 
   return `
   <section class="fade-in space-y-8">
-    <div class="bg-white rounded-3xl border border-maroon/10 shadow-sm p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+    <div class="card p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
       <div class="flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full bg-brand text-white text-2xl font-black flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</div>
+        <div class="w-16 h-16 rounded-full bg-maroon text-white text-2xl font-black flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</div>
         <div>
           <p class="font-display text-2xl font-bold text-maroon">${esc(user.name)}</p>
           <p class="text-sm text-ink/70">@${esc(user.username)} · ${esc(user.email)}</p>
@@ -1279,17 +1329,17 @@ function renderProfile(user) {
     </div>
 
     <div class="grid sm:grid-cols-3 gap-4">
-      <div class="bg-blush/60 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">${orders.length}</p><p class="text-xs mt-1 font-semibold">Total Pesanan</p></div>
-      <div class="bg-emerald-100 rounded-2xl p-6"><p class="font-display text-3xl font-black text-emerald-700">${paidOrders.length}</p><p class="text-xs mt-1 font-semibold">Pesanan Lunas</p></div>
-      <div class="bg-mint/70 rounded-2xl p-6"><p class="font-display text-3xl font-black text-brand">${formatRp(totalSpent)}</p><p class="text-xs mt-1 font-semibold">Total Belanja (Lunas)</p></div>
+      <div class="card p-6"><p class="font-display text-3xl font-black text-maroon">${orders.length}</p><p class="text-xs mt-1 font-semibold text-ink/70">Total Pesanan</p></div>
+      <div class="card p-6"><p class="font-display text-3xl font-black text-emerald-700">${paidOrders.length}</p><p class="text-xs mt-1 font-semibold text-ink/70">Pesanan Lunas</p></div>
+      <div class="card p-6"><p class="font-display text-3xl font-black text-maroon">${formatRp(totalSpent)}</p><p class="text-xs mt-1 font-semibold text-ink/70">Total Belanja (Lunas)</p></div>
     </div>
 
     <div>
-      <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon border-b-2 border-brand pb-2 mb-6">Riwayat Pesanan Saya</h2>
+      <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon border-b border-maroon/20 pb-3 mb-6">Riwayat Pesanan Saya</h2>
       ${orders.length ? `
         <div class="space-y-4">
           ${orders.map(o => `
-            <div class="bg-white rounded-2xl border border-maroon/10 shadow-sm p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="card p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <p class="font-display font-bold text-maroon">#${esc(o.id)}</p>
                 <p class="text-xs text-ink/60">${formatDate(o.createdAt)} · ${o.items.reduce((s, i) => s + i.qty, 0)} item · ${esc(o.payment)}</p>
@@ -1297,12 +1347,12 @@ function renderProfile(user) {
               </div>
               <div class="flex items-center gap-4 md:gap-6 flex-wrap">
                 <span class="text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap ${orderStatusBadge(o.status)}">${esc(o.status)}</span>
-                <p class="font-bold text-brand whitespace-nowrap">${formatRp(o.total)}</p>
+                <p class="font-bold text-maroon whitespace-nowrap">${formatRp(o.total)}</p>
                 <a href="#/invoice/${esc(o.id)}" class="btn-ghost px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Lihat Invoice</a>
               </div>
             </div>`).join('')}
         </div>` : `
-        <div class="text-center py-12 bg-white rounded-2xl border border-dashed border-maroon/20">
+        <div class="text-center py-12 card border-dashed">
           <div class="text-5xl">🧾</div>
           <p class="font-semibold mt-3">Belum ada pesanan</p>
           <p class="text-sm text-ink/60 mt-1">Pesananmu akan muncul di sini setelah checkout.</p>
@@ -1361,18 +1411,61 @@ function renderNotFound() {
 }
 
 /* ==========================================================
-   CAROUSEL
+   HERO SLIDER
+   Autoplay 5 detik, berhenti saat kursor di atas banner,
+   bisa digeser (swipe) di layar sentuh, dan progress bar.
    ========================================================== */
 function heroGo(i) {
-  heroIndex = (i + HERO_SLIDES.length) % HERO_SLIDES.length;
-  const track = $('#hero-track');
-  if (track) track.style.transform = `translateX(-${heroIndex * 100}%)`;
+  const n = HERO_SLIDES.length;
+  heroIndex = (i + n) % n;
+
+  document.querySelectorAll('.hero-text').forEach((el, k) => el.classList.toggle('hidden', k !== heroIndex));
+  document.querySelectorAll('.hero-slide').forEach((el, k) => {
+    el.classList.toggle('opacity-100', k === heroIndex);
+    el.classList.toggle('scale-100', k === heroIndex);
+    el.classList.toggle('z-10', k === heroIndex);
+    el.classList.toggle('opacity-0', k !== heroIndex);
+    el.classList.toggle('scale-95', k !== heroIndex);
+    el.classList.toggle('z-0', k !== heroIndex);
+  });
   document.querySelectorAll('.hero-dot').forEach((d, k) => d.classList.toggle('active', k === heroIndex));
+
+  // Restart progress bar
+  const bar = $('#hero-bar');
+  if (bar) {
+    bar.style.animation = 'none';
+    void bar.offsetWidth;
+    bar.style.animation = '';
+    bar.style.animationPlayState = heroPaused ? 'paused' : 'running';
+  }
 }
 
+function attachHeroSwipe() {
+  const section = $('#hero-section');
+  if (!section) return;
+  let startX = null;
+  section.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  section.addEventListener('touchend', e => {
+    if (startX === null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) heroGo(heroIndex + (dx < 0 ? 1 : -1));
+    startX = null;
+  });
+}
+
+// Autoplay: pindah slide setiap 5 detik, kecuali sedang di-hover
 setInterval(() => {
-  if ($('#hero-track')) heroGo(heroIndex + 1);
+  if ($('#hero-section') && !heroPaused) heroGo(heroIndex + 1);
 }, 5000);
+
+// Pause saat kursor masuk area hero
+document.addEventListener('mouseover', e => {
+  const inHero = !!(e.target.closest && e.target.closest('#hero-section'));
+  if (inHero === heroPaused) return;
+  heroPaused = inHero;
+  const bar = $('#hero-bar');
+  if (bar) bar.style.animationPlayState = heroPaused ? 'paused' : 'running';
+});
 
 /* ==========================================================
    ROUTER (SPA feel, hash-based)
@@ -1397,7 +1490,10 @@ function render() {
     a.classList.toggle('active', a.dataset.nav === page);
   });
 
-  if (page === 'beranda') heroGo(heroIndex);
+  if (page === 'beranda') {
+    heroGo(heroIndex);
+    attachHeroSwipe();
+  }
   if (page === 'katalog') drawCatalogGrid();
   if (page === 'checkout') drawCheckoutTotals();
   updateBadge();
@@ -1441,13 +1537,13 @@ function openModal(id) {
   if (!p) return;
   const habis = p.status === 'Stok Habis';
   $('#modal-content').innerHTML = `
-    <div class="w-full aspect-square sm:aspect-video rounded-2xl overflow-hidden bg-gradient-to-br ${p.grad}">
+    <div class="w-full aspect-square rounded-2xl overflow-hidden ${mediaBg}">
       ${productMedia(p)}
     </div>
     <span class="inline-block mt-5 text-[11px] font-bold px-3 py-1 rounded-full ${productStatusBadge(p.status)}">${p.status.toUpperCase()}</span>
     <p class="text-[11px] font-bold text-brand uppercase mt-3">${p.artist}</p>
     <h2 class="font-display text-xl font-bold leading-snug text-maroon">${p.name}</h2>
-    <p class="text-2xl font-bold text-brand mt-1">${formatRp(p.price)}</p>
+    <p class="text-2xl font-bold text-maroon mt-1">${formatRp(p.price)}</p>
     <p class="text-sm text-ink/70 mt-4 leading-relaxed">${p.desc}</p>
     <ul class="mt-4 space-y-2 text-sm">
       ${p.specs.map(s => `<li class="flex gap-2"><span class="text-brand">✦</span>${s}</li>`).join('')}
