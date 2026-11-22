@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FUNSTUFF | Merch & Album K-Pop Resmi</title>
-  <meta name="description" content="Funstuff adalah toko merch dan album resmi untuk penggemar musik K-Pop di Indonesia dengan stok siap kirim. Keychain shaker Cortis, ILLIT, LNGSHOT, dan NewJeans." />
+  <meta name="description" content="Funstuff adalah toko merch dan album resmi untuk penggemar K-Pop di Indonesia dengan stok siap kirim. Keychain, PC holder, shaker, dan lainnya dari AESPA, ATEEZ, CORTIS, ENHYPEN, ILLIT, LNGSHOT, NCT WISH, NEWJEANS, SEVENTEEN, dan TXT." />
 
   <!-- ============================================================
        GOOGLE ANALYTICS 4 (GA4) - PLACEHOLDER
@@ -50,7 +50,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <style>
-    html { scroll-behavior: smooth; }
     body { background: #fbf6f1; }
 
     /* Navigasi */
@@ -73,8 +72,12 @@
     .card { background: #fff; border: 1px solid #efe2da; border-radius: 1.25rem; }
     .product-card { transition: transform .3s ease, box-shadow .3s ease, border-color .3s; }
     .product-card:hover { transform: translateY(-4px); box-shadow: 0 18px 35px -22px rgba(122,16,20,.45); border-color: #e2c9c0; }
-    .product-card:hover img { transform: scale(1.06); }
     .product-card img { transition: transform .5s ease; }
+    .product-card:hover img { transform: scale(1.06); }
+
+    /* Logo: gambar diperbesar dengan transform agar area putih di sekitar logo terpotong */
+    .logo-frame { overflow: hidden; display: flex; align-items: center; justify-content: flex-start; }
+    .logo-frame img { height: 100%; width: auto; max-width: none; object-fit: contain; transform-origin: center; }
 
     /* Running text */
     .marquee { overflow: hidden; white-space: nowrap; }
@@ -92,12 +95,19 @@
     .hero-sticker { animation: floaty 5s ease-in-out infinite; }
     @keyframes floaty { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(-2deg); } }
 
+    /* Artis */
     .artist-circle { transition: transform .2s; }
     .artist-circle:hover { transform: translateY(-3px); }
     .artist-circle:hover .circle { background: #7a1014; color: #fff; }
     .artist-circle .circle { transition: background .2s, color .2s; }
     .chip { transition: all .2s; }
     .chip.active { background: #7a1014; color: #fff; border-color: #7a1014; }
+
+    /* Showcase scroll horizontal (GSAP ScrollTrigger) */
+    .showcase-wrap { position: relative; height: 100vh; overflow: hidden; }
+    .showcase-track { display: flex; gap: 1.5rem; padding: 0 1.5rem; will-change: transform; height: 100%; align-items: center; }
+    .showcase-card { flex: 0 0 min(72vw, 300px); }
+    @media (min-width: 768px) { .showcase-card { flex: 0 0 340px; } }
 
     .bump { animation: bump .35s ease; }
     @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
@@ -128,8 +138,8 @@
   <!-- ================= HEADER / NAVIGASI ================= -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-maroon/10 no-print">
     <nav class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
-      <a href="#/beranda" class="flex items-center">
-        <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-12 w-auto object-contain" />
+      <a href="#/beranda" class="logo-frame h-16 w-44 md:w-56 shrink-0">
+        <img src="assets/funstuff.png" alt="Funstuff Logo" style="transform: scale(1.4);" />
       </a>
 
       <ul class="hidden md:flex items-center gap-7 text-sm font-medium text-maroon">
@@ -172,7 +182,9 @@
   <footer class="bg-white border-t border-maroon/10 mt-16 no-print">
     <div class="max-w-6xl mx-auto px-4 py-12 grid gap-10 md:grid-cols-4 text-sm">
       <div>
-        <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-14 w-auto object-contain" />
+        <div class="logo-frame h-20 w-56">
+          <img src="assets/funstuff.png" alt="Funstuff Logo" style="transform: scale(1.4);" />
+        </div>
         <p class="mt-3 text-ink/70 leading-relaxed">Toko merch dan album resmi untuk penggemar musik di Indonesia, dengan stok siap kirim.</p>
       </div>
       <div>
@@ -211,7 +223,7 @@
 
   <!-- ================= MODAL DETAIL PRODUK ================= -->
   <div id="modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-ink/40 backdrop-blur-sm p-4">
-    <div class="fade-in bg-white rounded-3xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div data-lenis-prevent class="fade-in bg-white rounded-3xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto shadow-2xl">
       <button data-action="close-modal" aria-label="Tutup" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-sand hover:bg-blush text-maroon z-10">✕</button>
       <div id="modal-content"></div>
     </div>
@@ -219,6 +231,11 @@
 
   <!-- ================= TOAST ================= -->
   <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-50 whitespace-nowrap"></div>
+
+  <!-- Library animasi: Lenis (smooth scroll) + GSAP & ScrollTrigger -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
 <script>
 /* ==========================================================
@@ -229,94 +246,98 @@ const WA_MESSAGE = 'Halo Funstuff, saya ingin bertanya mengenai produk merchandi
 const WA_URL = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)}`;
 
 /* ==========================================================
-   DATA
-   Foto produk diambil dari folder assets/ di repository.
-   Nama file sengaja tanpa ekstensi sesuai hasil upload.
+   DATA ARTIS
    ========================================================== */
 const ARTISTS = [
-  { name: 'CORTIS',   short: 'CRT' },
-  { name: 'ILLIT',    short: 'IL' },
-  { name: 'LNGSHOT',  short: 'LS' },
-  { name: 'NEWJEANS', short: 'NJ' }
+  { name: 'AESPA',     short: 'AE' },
+  { name: 'ATEEZ',     short: 'AT' },
+  { name: 'CORTIS',    short: 'CRT' },
+  { name: 'ENHYPEN',   short: 'EN' },
+  { name: 'ILLIT',     short: 'IL' },
+  { name: 'LNGSHOT',   short: 'LS' },
+  { name: 'NCT WISH',  short: 'NW' },
+  { name: 'NEWJEANS',  short: 'NJ' },
+  { name: 'SEVENTEEN', short: 'SV' },
+  { name: 'TXT',       short: 'TX' }
 ];
 
-const PRODUCTS = [
-  {
-    id: 'p1', artist: 'CORTIS', name: 'Cortis Keychain Shaker (COTL Ver)', price: 80000,
-    image: 'assets/cortis shaker cotl', emoji: '🔑', status: 'Siap Kirim',
-    short: 'Keychain shaker edisi COTL Ver, 6x6 cm acrylic dengan ballchain.',
-    desc: 'Keychain shaker edisi COTL Ver yang didesain khusus untuk Coer. Isian bergerak lembut setiap kali diguncang, cocok untuk tas, kunci, atau dipajang di meja belajar.',
-    specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Ballchain sebagai gantungan', '5 pcs isian shaker ukuran ±1 cm', 'Tema resmi Coer']
-  },
-  {
-    id: 'p2', artist: 'CORTIS', name: 'Cortis Keychain Shaker (ACAI Ver)', price: 80000,
-    image: 'assets/cortis shaker acai', emoji: '🔮', status: 'Siap Kirim',
-    short: 'Keychain shaker edisi ACAI Ver dengan warna ungu yang estetik.',
-    desc: 'Keychain shaker edisi ACAI Ver dengan warna ungu estetik. Dilengkapi 5 pcs isian shaker yang bergerak saat diguncang.',
-    specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Warna ungu estetik', '5 pcs isian shaker', 'Tema resmi Coer']
-  },
-  {
-    id: 'p3', artist: 'CORTIS', name: 'Cortis Keychain Shaker (TNT Ver)', price: 80000,
-    image: 'assets/Cortis shaker tnt', emoji: '🍃', status: 'Siap Kirim',
-    short: 'Keychain shaker edisi TNT Ver dengan warna mint yang segar.',
-    desc: 'Keychain shaker edisi TNT Ver dengan warna mint segar. Ringan dan mudah dibawa ke mana saja.',
-    specs: ['Bahan: Acrylic, ukuran 6 x 6 cm', 'Warna mint segar', 'Ballchain sebagai gantungan', 'Tema resmi Coer']
-  },
-  {
-    id: 'p4', artist: 'CORTIS', name: 'Cortis Keychain Shaker (REDRED Ver)', price: 80000,
-    image: 'assets/cortis shaker red red', emoji: '❤️', status: 'Pre-Order',
-    short: 'Keychain shaker edisi REDRED Ver dengan warna merah menyala.',
-    desc: 'Keychain shaker edisi REDRED Ver dengan warna merah menyala, spesial untuk Coer. Produk ini tersedia dengan sistem pre-order.',
-    specs: ['Warna merah menyala', 'Edisi REDRED Ver', 'Tema resmi Coer', 'Status: Pre-Order']
-  },
-  {
-    id: 'p5', artist: 'CORTIS', name: 'Cortis Hair Clip Set', price: 45000,
-    image: 'assets/cortis hair clip', emoji: '🎀', status: 'Siap Kirim',
-    short: 'Jepit rambut akrilik karakter Cortis yang lucu untuk outfit konser.',
-    desc: 'Jepit rambut akrilik karakter Cortis yang lucu untuk melengkapi outfit konsermu.',
-    specs: ['Bahan: Akrilik', 'Desain karakter Cortis', 'Cocok untuk outfit konser', 'Tema resmi Cortis']
-  },
-  {
-    id: 'p6', artist: 'CORTIS', name: 'Cortis Enamel / Acrylic Pin', price: 35000,
-    image: 'assets/cortis pin', emoji: '📌', status: 'Siap Kirim',
-    short: 'Pin eksklusif tema Cortis untuk tas, lanyard, atau topi.',
-    desc: 'Pin eksklusif bertema Cortis untuk hiasan tas, lanyard, atau topi kesayanganmu.',
-    specs: ['Tema eksklusif Cortis', 'Cocok untuk tas, lanyard, atau topi', 'Ukuran kecil dan ringan', 'Koleksi penggemar']
-  },
-  {
-    id: 'p7', artist: 'ILLIT', name: 'ILLIT Acrylic Keychain', price: 55000,
-    image: 'assets/illit keychain', emoji: '🐰', status: 'Siap Kirim',
-    short: 'Gantungan kunci akrilik dua sisi dengan desain orisinal ILLIT.',
-    desc: 'Gantungan kunci akrilik dua sisi dengan desain orisinal bertema ILLIT.',
-    specs: ['Bahan: Akrilik', 'Desain dua sisi', 'Desain orisinal ILLIT', 'Cocok untuk tas atau kunci']
-  },
-  {
-    id: 'p8', artist: 'LNGSHOT', name: 'LNGSHOT Exclusive Keychain', price: 55000,
-    image: 'assets/lngshot keychain', emoji: '⭐', status: 'Siap Kirim',
-    short: 'Keychain koleksi khusus penggemar LNGSHOT dengan cetakan tajam.',
-    desc: 'Keychain koleksi khusus penggemar LNGSHOT dengan cetakan yang tajam dan awet.',
-    specs: ['Cetakan tajam dan awet', 'Koleksi khusus penggemar LNGSHOT', 'Cocok untuk tas atau kunci', 'Tema resmi LNGSHOT']
-  },
-  {
-    id: 'p9', artist: 'NEWJEANS', name: 'NewJeans Photocard Holder', price: 65000,
-    image: 'assets/newjeans pc holder', emoji: '💳', status: 'Siap Kirim',
-    short: 'Tempat penyimpanan photocard akrilik estetik dengan ballchain.',
-    desc: 'Tempat penyimpanan photocard (CAH) akrilik yang estetik, lengkap dengan ballchain.',
-    specs: ['Bahan: Akrilik', 'Untuk menyimpan photocard (CAH)', 'Dilengkapi ballchain', 'Desain estetik']
-  }
+/* ==========================================================
+   DATA PRODUK
+   Path gambar persis sesuai nama file di folder assets/
+   Format: [artis, nama file (tanpa .png), nama tampilan, harga, status]
+   ========================================================== */
+const RAW_PRODUCTS = [
+  ['AESPA',     'AESPA BAG CHARM',                  'AESPA Bag Charm',                    75000, 'Siap Kirim'],
+  ['AESPA',     'AESPA KEYCHAIN LEMONADE',          'AESPA Keychain Lemonade',            55000, 'Siap Kirim'],
+  ['AESPA',     'AESPA KEYCHAIN SHAKER',            'AESPA Keychain Shaker',              80000, 'Siap Kirim'],
+  ['ATEEZ',     'ATEEZ LINKED KEYCHAIN',            'ATEEZ Linked Keychain',              55000, 'Siap Kirim'],
+  ['ATEEZ',     'ATEEZ PC HOLDER',                  'ATEEZ PC Holder',                    65000, 'Siap Kirim'],
+  ['ATEEZ',     'ATEEZ SAFETY BROOCHES',            'ATEEZ Safety Brooches',              40000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS BUTTON PIN',                'Cortis Button Pin',                  35000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS HAIR CLIP',                 'Cortis Hair Clip',                   45000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS KEYCHAIN SHAKER ACAI',      'Cortis Keychain Shaker (ACAI Ver)',  80000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS KEYCHAIN SHAKER COTL',      'Cortis Keychain Shaker (COTL Ver)',  80000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS KEYCHAIN SHAKER REDRED',    'Cortis Keychain Shaker (REDRED Ver)',80000, 'Pre-Order'],
+  ['CORTIS',    'CORTIS KEYCHAIN SHAKER TNT',       'Cortis Keychain Shaker (TNT Ver)',   80000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS KEYCHAIN',                  'Cortis Keychain',                    55000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS PC HOLDER',                 'Cortis PC Holder',                   65000, 'Siap Kirim'],
+  ['CORTIS',    'CORTIS POP SOCKET',                'Cortis Pop Socket',                  50000, 'Siap Kirim'],
+  ['ENHYPEN',   'ENHYPEN PC HOLDER',                'ENHYPEN PC Holder',                  65000, 'Siap Kirim'],
+  ['ILLIT',     'ILLIT KEYCHAIN ALBUM',             'ILLIT Keychain Album',               60000, 'Siap Kirim'],
+  ['ILLIT',     'ILLIT KEYCHAIN CHARM',             'ILLIT Keychain Charm',               45000, 'Siap Kirim'],
+  ['LNGSHOT',   'LNGSHOT CLICKER KEYCHAIN',         'LNGSHOT Clicker Keychain',           50000, 'Siap Kirim'],
+  ['LNGSHOT',   'LNGSHOT KEYCHAIN',                 'LNGSHOT Keychain',                   55000, 'Siap Kirim'],
+  ['LNGSHOT',   'LNGSHOT PC HOLDER',                'LNGSHOT PC Holder',                  65000, 'Siap Kirim'],
+  ['NCT WISH',  'NCT WISH KEYCHAIN SHAKER',         'NCT WISH Keychain Shaker',           80000, 'Siap Kirim'],
+  ['NEWJEANS',  'NEWJEANS PC HOLDER',               'NewJeans PC Holder',                 65000, 'Siap Kirim'],
+  ['SEVENTEEN', 'SEVENTEEN KEYCHAIN SHAKER HOLIDAY','SEVENTEEN Keychain Shaker Holiday',  85000, 'Siap Kirim'],
+  ['SEVENTEEN', 'SEVENTEEN KEYCHAIN SHAKER',        'SEVENTEEN Keychain Shaker',          80000, 'Siap Kirim'],
+  ['SEVENTEEN', 'SEVENTEEN LINKED KEYCHAIN',        'SEVENTEEN Linked Keychain',          55000, 'Siap Kirim'],
+  ['SEVENTEEN', 'SEVENTEEN MINITEEN KEYCHAIN',      'SEVENTEEN Miniteen Keychain',        40000, 'Siap Kirim'],
+  ['TXT',       'TXT CARABINER',                    'TXT Carabiner',                      60000, 'Siap Kirim'],
+  ['TXT',       'TXT CLICKER KEYCHAIN',             'TXT Clicker Keychain',               50000, 'Siap Kirim'],
+  ['TXT',       'TXT KEYCHAIN SHAKER',              'TXT Keychain Shaker',                80000, 'Siap Kirim']
 ];
 
+/* Jenis produk ditentukan dari nama file (untuk spesifikasi dan emoji fallback) */
+function productKind(file) {
+  if (/SHAKER/.test(file))      return { kind: 'Keychain Shaker', emoji: '🔑' };
+  if (/KEYCHAIN/.test(file))    return { kind: 'Keychain',       emoji: '🔑' };
+  if (/PC HOLDER/.test(file))   return { kind: 'PC Holder',      emoji: '💳' };
+  if (/HAIR CLIP/.test(file))   return { kind: 'Hair Clip',      emoji: '🎀' };
+  if (/PIN|BROOCH/.test(file))  return { kind: 'Pin / Brooch',   emoji: '📌' };
+  if (/CARABINER/.test(file))   return { kind: 'Carabiner',      emoji: '🪝' };
+  if (/POP SOCKET/.test(file))  return { kind: 'Pop Socket',     emoji: '⚪' };
+  if (/CHARM/.test(file))       return { kind: 'Bag Charm',      emoji: '🧸' };
+  return { kind: 'Merchandise', emoji: '🎁' };
+}
+
+const PRODUCTS = RAW_PRODUCTS.map(([artist, file, name, price, status], idx) => {
+  const { kind, emoji } = productKind(file);
+  return {
+    id: 'p' + (idx + 1),
+    artist,
+    name,
+    price,
+    status,
+    image: `assets/${file}.png`,
+    emoji,
+    short: `${kind} ${artist} original, siap kirim dari Indonesia.`,
+    desc: `${name} dari ${artist}. Setiap produk melalui kontrol kualitas sebelum dikemas agar sampai ke tanganmu dalam kondisi terbaik.`,
+    specs: [
+      `Kategori: ${kind}`,
+      `Grup: ${artist}`,
+      'Kondisi: Baru & original',
+      status === 'Pre-Order' ? 'Status: Pre-Order (estimasi kirim tertera di keranjang)' : 'Pengiriman dari Indonesia'
+    ]
+  };
+});
+
+/* Slide hero: memakai produk yang sama dengan katalog (berdasarkan id) */
 const HERO_SLIDES = [
-  {
-    tag: 'Keychain Shaker', title: 'COTL VER',
-    sub: 'Keychain Shaker 6 x 6 cm', detail: '5 pcs isian shaker · Tema resmi Coer',
-    image: 'assets/cortis shaker cotl', emoji: '🔑', target: 'p1'
-  },
-  {
-    tag: 'Keychain Shaker', title: 'ACAI VER',
-    sub: 'Warna ungu yang estetik', detail: 'Edisi Cortis · Siap kirim ke seluruh Indonesia',
-    image: 'assets/cortis shaker acai', emoji: '🔮', target: 'p2'
-  }
+  { tag: 'Keychain Shaker', title: 'COTL VER',     sub: 'Cortis Keychain Shaker 6 x 6 cm', detail: 'Tema resmi Coer · Siap kirim ke seluruh Indonesia', pid: 'p10' },
+  { tag: 'Keychain Shaker', title: 'AESPA',        sub: 'AESPA Keychain Shaker',            detail: 'Koleksi penggemar AESPA · Siap kirim',           pid: 'p3'  },
+  { tag: 'Holiday Edition', title: 'HOLIDAY',      sub: 'SEVENTEEN Keychain Shaker Holiday', detail: 'Edisi terbatas · Stok siap kirim',               pid: 'p24' }
 ];
 
 const COUPONS = {
@@ -394,6 +415,7 @@ let artistFilter = 'ALL';
 let searchQuery = '';
 let heroIndex = 0;
 let heroPaused = false;
+let lenis = null;
 
 /* ==========================================================
    HELPER
@@ -408,8 +430,7 @@ const inputCls = 'w-full rounded-xl border border-maroon/15 bg-white px-4 py-3 t
 const labelCls = 'block text-sm font-semibold text-maroon mb-1';
 const mediaBg = 'bg-[#f5ece6]';
 
-/* Fallback: jika foto gagal dimuat, img diganti dengan emoji.
-   Dipanggil dari atribut onerror pada tag <img>. */
+/* Fallback: jika foto gagal dimuat, img diganti dengan emoji. */
 function imgFail(el) {
   const span = document.createElement('span');
   span.className = 'w-full h-full flex items-center justify-center text-5xl';
@@ -571,6 +592,23 @@ function productCard(p) {
   </article>`;
 }
 
+function showcaseCard(p) {
+  return `
+  <article class="showcase-card card p-4 flex flex-col">
+    <div class="aspect-[4/5] rounded-2xl ${mediaBg} overflow-hidden">
+      ${productMedia(p)}
+    </div>
+    <div class="flex items-start justify-between gap-3 mt-4">
+      <div class="min-w-0">
+        <p class="text-[11px] font-bold text-brand uppercase tracking-wider">${p.artist}</p>
+        <p class="font-semibold text-sm leading-snug line-clamp-2 text-maroon">${p.name}</p>
+      </div>
+      <p class="font-bold text-maroon text-sm whitespace-nowrap">${formatRp(p.price)}</p>
+    </div>
+    <button data-action="detail" data-id="${p.id}" class="btn-ghost rounded-full py-2 text-xs font-semibold mt-4">Lihat Detail</button>
+  </article>`;
+}
+
 function emptyCartView() {
   return `
   <section class="fade-in text-center py-20">
@@ -586,6 +624,7 @@ function emptyCartView() {
    ========================================================== */
 function renderHome() {
   const marqueeText = '✨ GUNAKAN KODE KUPON COERFUN10 UNTUK DISKON 10% ATAU FUNSTUFF15K UNTUK POTONGAN RP15.000! ✨ &nbsp;•&nbsp; STOK SIAP KIRIM DARI INDONESIA &nbsp;•&nbsp; 100% IN-HOUSE IP FANMERCH &nbsp;•&nbsp; ';
+  const showcaseItems = PRODUCTS.slice(0, 10);
 
   return `
   <!-- RUNNING TEXT -->
@@ -610,7 +649,7 @@ function renderHome() {
             <p class="text-sm text-ink/60 mt-2">${s.detail}</p>
             <div class="mt-8 flex flex-wrap gap-3">
               <a href="#/katalog" class="btn-primary px-7 py-3 rounded-full font-semibold text-sm">Belanja Sekarang</a>
-              <button data-action="detail" data-id="${s.target}" class="btn-ghost px-6 py-3 rounded-full font-semibold text-sm">Lihat Detail</button>
+              <button data-action="detail" data-id="${s.pid}" class="btn-ghost px-6 py-3 rounded-full font-semibold text-sm">Lihat Detail</button>
             </div>
           </div>`).join('')}
       </div>
@@ -631,10 +670,13 @@ function renderHome() {
 
     <div class="relative order-1 md:order-2">
       <div id="hero-media" class="relative aspect-square max-w-sm mx-auto w-full">
-        ${HERO_SLIDES.map((s, i) => `
+        ${HERO_SLIDES.map((s, i) => {
+          const p = getProduct(s.pid);
+          return `
           <div class="hero-slide absolute inset-0 rounded-[1.75rem] ${mediaBg} overflow-hidden shadow-xl transition-all duration-500 ${i === heroIndex ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0'}">
-            <img src="${esc(s.image)}" alt="${esc(s.title)}" data-emoji="${s.emoji}" class="w-full h-full object-cover" onerror="imgFail(this)" />
-          </div>`).join('')}
+            ${productMedia(p)}
+          </div>`;
+        }).join('')}
         <div class="hero-sticker absolute -bottom-4 -left-4 bg-maroon text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-lg z-20">
           Siap Kirim 🇮🇩
         </div>
@@ -643,19 +685,30 @@ function renderHome() {
   </section>
 
   <!-- ARTIS -->
-  <section class="mt-14">
-    <div class="flex flex-wrap justify-center gap-6 md:gap-10">
+  <section class="reveal mt-14">
+    <div class="flex gap-6 md:gap-10 overflow-x-auto pb-2 md:flex-wrap md:justify-center md:overflow-visible">
       ${ARTISTS.map(a => `
-        <button data-action="artist" data-name="${a.name}" class="artist-circle flex flex-col items-center gap-2 text-[11px] font-bold text-maroon">
-          <span class="circle w-16 h-16 md:w-20 md:h-20 rounded-full border border-maroon/30 bg-white flex items-center justify-center text-sm font-black text-maroon">${a.short}</span>
+        <button data-action="artist" data-name="${a.name}" class="artist-circle shrink-0 flex flex-col items-center gap-2 text-[10px] font-bold text-maroon">
+          <span class="circle w-14 h-14 md:w-18 md:h-18 rounded-full border border-maroon/30 bg-white flex items-center justify-center text-xs font-black text-maroon">${a.short}</span>
           <span class="uppercase tracking-wide">${a.name}</span>
         </button>
       `).join('')}
     </div>
   </section>
 
+  <!-- KOLEKSI PILIHAN: scroll horizontal dengan animasi GSAP ScrollTrigger -->
+  <section class="mt-20">
+    <p class="text-center text-xs font-bold uppercase tracking-[0.3em] text-brand">Koleksi Pilihan</p>
+    <h2 class="font-display text-2xl md:text-3xl font-bold uppercase tracking-wider text-center text-maroon mt-2">Scroll Untuk Melihat</h2>
+  </section>
+  <section id="showcase-wrap" class="showcase-wrap mt-6 -mx-4 md:mx-0">
+    <div id="showcase-track" class="showcase-track">
+      ${showcaseItems.map(showcaseCard).join('')}
+    </div>
+  </section>
+
   <!-- PRODUK TERBARU -->
-  <section class="mt-16">
+  <section class="reveal mt-20">
     <div class="flex items-end justify-between border-b border-maroon/20 pb-3 mb-6">
       <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon">Produk Terbaru</h2>
       <a href="#/katalog" class="text-sm font-semibold text-brand hover:underline">Lihat semua →</a>
@@ -666,7 +719,7 @@ function renderHome() {
   </section>
 
   <!-- KENAPA FUNSTUFF -->
-  <section class="mt-20">
+  <section class="reveal mt-20">
     <p class="text-center text-xs font-bold uppercase tracking-[0.3em] text-brand">Kenapa Kami</p>
     <h2 class="font-display text-2xl md:text-3xl font-bold uppercase tracking-wider text-center text-maroon mt-2">Kenapa Funstuff?</h2>
     <div class="grid md:grid-cols-3 gap-6 mt-10">
@@ -707,7 +760,8 @@ function renderCatalog() {
       ${ARTISTS.map(a => `<button data-action="artist" data-name="${a.name}" class="chip rounded-full border border-maroon/20 px-4 py-1.5 text-xs font-semibold text-maroon bg-white">${a.name}</button>`).join('')}
     </div>
 
-    <div id="catalog-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-8"></div>
+    <p id="catalog-count" class="text-xs text-ink/50 mt-5"></p>
+    <div id="catalog-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-4"></div>
   </section>`;
 }
 
@@ -723,6 +777,9 @@ function drawCatalogGrid() {
   document.querySelectorAll('.chip').forEach(c => {
     c.classList.toggle('active', c.dataset.name === artistFilter);
   });
+
+  const count = $('#catalog-count');
+  if (count) count.textContent = `Menampilkan ${list.length} produk`;
 
   if (!list.length) {
     grid.innerHTML = `
@@ -742,7 +799,9 @@ function drawCatalogGrid() {
 function renderAbout() {
   return `
   <section class="fade-in max-w-3xl mx-auto text-center">
-    <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-24 w-auto object-contain mx-auto" />
+    <div class="logo-frame h-28 w-72 mx-auto">
+      <img src="assets/funstuff.png" alt="Funstuff Logo" style="transform: scale(1.4);" />
+    </div>
     <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mt-6">Tentang Funstuff</h1>
     <p class="mt-4 text-ink/80 leading-relaxed">Funstuff adalah toko merch dan album resmi untuk penggemar musik di Indonesia, dengan stok yang siap kirim dari Indonesia.</p>
 
@@ -1259,7 +1318,9 @@ function renderAuthForms() {
   return `
   <section class="fade-in max-w-md mx-auto card p-8">
     <div class="text-center mb-6">
-      <img src="assets/funstuff.png" alt="Funstuff Logo" class="h-16 w-auto object-contain mx-auto" />
+      <div class="logo-frame h-20 w-56 mx-auto">
+        <img src="assets/funstuff.png" alt="Funstuff Logo" style="transform: scale(1.4);" />
+      </div>
       <h1 class="font-display text-2xl font-bold uppercase tracking-wide text-maroon mt-4">${isLogin ? 'Login' : 'Registrasi'}</h1>
       <p class="text-sm text-ink/60">${isLogin ? 'Masuk untuk melihat riwayat pesananmu' : 'Buat akun baru untuk penggemar K-Pop'}</p>
     </div>
@@ -1468,6 +1529,67 @@ document.addEventListener('mouseover', e => {
 });
 
 /* ==========================================================
+   SMOOTH SCROLL (LENIS) + ANIMASI SCROLL (GSAP ScrollTrigger)
+   - Lenis: scroll halus di seluruh halaman.
+   - Koleksi Pilihan: kartu bergeser horizontal saat halaman di-scroll.
+   - .reveal: elemen naik dan muncul saat masuk layar.
+   ========================================================== */
+function initSmoothScroll() {
+  if (!window.Lenis) return;
+  lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(time => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+  } else {
+    const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+}
+
+function killScrollAnimations() {
+  if (window.ScrollTrigger) ScrollTrigger.getAll().forEach(t => t.kill(true));
+}
+
+function initPageAnimations(page) {
+  if (!window.gsap || !window.ScrollTrigger) return;
+
+  if (page === 'beranda') {
+    const wrap = $('#showcase-wrap');
+    const track = $('#showcase-track');
+    if (wrap && track) {
+      const distance = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
+      gsap.to(track, {
+        x: () => -distance(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: wrap,
+          start: 'top top',
+          end: () => '+=' + distance(),
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true
+        }
+      });
+    }
+
+    gsap.utils.toArray('.reveal').forEach(el => {
+      gsap.from(el, {
+        y: 40,
+        opacity: 0,
+        duration: 0.9,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }
+      });
+    });
+  }
+
+  ScrollTrigger.refresh();
+}
+
+/* ==========================================================
    ROUTER (SPA feel, hash-based)
    ========================================================== */
 const routes = {
@@ -1484,6 +1606,8 @@ const routes = {
 function render() {
   const { page, param } = parseRoute();
   const view = routes[page];
+
+  killScrollAnimations();
   app.innerHTML = view ? view(param) : renderNotFound();
 
   document.querySelectorAll('[data-nav]').forEach(a => {
@@ -1497,11 +1621,14 @@ function render() {
   if (page === 'katalog') drawCatalogGrid();
   if (page === 'checkout') drawCheckoutTotals();
   updateBadge();
+
+  initPageAnimations(page);
 }
 
 function onRouteChange() {
   $('#mobile-menu').classList.add('hidden');
-  window.scrollTo({ top: 0, behavior: 'auto' });
+  if (lenis) lenis.scrollTo(0, { immediate: true });
+  else window.scrollTo({ top: 0, behavior: 'auto' });
   render();
 
   const { page } = parseRoute();
@@ -1686,6 +1813,7 @@ $('#menu-btn').addEventListener('click', () => {
   $('#mobile-menu').classList.toggle('hidden');
 });
 
+initSmoothScroll();
 updateBadge();
 updateAccountLink();
 onRouteChange();
