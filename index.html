@@ -59,7 +59,7 @@
     .nav-link:hover::after, .nav-link.active::after { width: 100%; }
     .nav-link.active { color: #b5121b; }
 
-    /* ---------- Logo (gambar diperbesar agar area putih terpotong) ---------- */
+    /* ---------- Logo ---------- */
     .logo-frame { overflow: hidden; display: flex; align-items: center; justify-content: flex-start; }
     .logo-img { height: 100%; width: auto; max-width: none; object-fit: contain; transform: scale(1.45); transform-origin: center; }
 
@@ -82,7 +82,7 @@
     .lift { transition: transform .35s cubic-bezier(.2,.7,.2,1); }
     .lift:hover { transform: translate3d(0,-3px,0); }
 
-    /* ---------- Reveal (IntersectionObserver, ringan) ---------- */
+    /* ---------- Reveal ---------- */
     .reveal { opacity: 0; transform: translate3d(0,24px,0); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
     .reveal.is-in { opacity: 1; transform: none; }
 
@@ -110,7 +110,7 @@
     .chip { transition: background-color .25s, color .25s, border-color .25s; }
     .chip.active { background: #7a1014; color: #fff; border-color: #7a1014; }
 
-    /* ---------- Showcase scroll (5 foto produk) ---------- */
+    /* ---------- Showcase scroll ---------- */
     .sc-wrap { position: relative; height: 300vh; }
     .sc-stage {
       position: sticky; top: 5rem; height: calc(100vh - 5rem);
@@ -144,7 +144,7 @@
       .sc-kicker { top: 2rem; }
     }
 
-    /* ---------- Doodle banner (adaptasi 21st.dev, vanilla JS + SVG) ---------- */
+    /* ---------- Doodle banner ---------- */
     .dcb { position: relative; overflow: hidden; border-radius: 1.75rem; background: #fbf6f1; border: 1px solid #efe2da; padding: 1.25rem 1.25rem 1rem; }
     .dcb-world { position: relative; height: clamp(210px, 28vw, 290px); width: 100%; }
     .dcb-doodles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
@@ -177,6 +177,391 @@
     .dcb-tag { font-size: .85rem; font-weight: 600; color: #2b1719; }
     .dcb-tag small { display: block; font-size: .72rem; font-weight: 500; color: rgba(43,23,25,.6); margin-top: .15rem; }
 
+    /* ---------- Slit Type FAQ (Tema Funstuff: Cream #fbf6f1 & Maroon #7a1014, White #ffffff on flood) ---------- */
+    .stf {
+      --stf-flood-in: 400ms;
+      --stf-flood-out: 280ms;
+      --stf-rule: 1px;
+      --stf-ease-flood: cubic-bezier(0.76, 0, 0.24, 1);
+      --stf-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --stf-gutter: clamp(16px, 4cqi, 56px);
+      --p: #fbf6f1;
+      --k: #7a1014;
+      --o: #ffffff;
+      position: relative;
+      container-type: inline-size;
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--p);
+      color: var(--k);
+      border: 1px solid #efe2da;
+      border-radius: 1.75rem;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: clamp(36px, 5cqi, 68px) 0 clamp(32px, 4.5cqi, 56px);
+      overflow-x: clip;
+    }
+    .stf *, .stf *::before, .stf *::after { box-sizing: border-box; }
+    .stf ::selection { background: var(--k); color: var(--o); }
+    .stf-wrap { padding: 0 var(--stf-gutter); }
+
+    .stf-title {
+      margin: 0;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 900;
+      font-size: clamp(38px, 10.5cqi, 108px);
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      color: var(--k);
+    }
+    .stf-line {
+      display: block;
+      overflow: hidden;
+      padding-top: 0.06em;
+      margin-top: -0.06em;
+    }
+    .stf-title[data-slit="true"] { cursor: default; }
+    .stf-title { --stf-cut-k: 1; --stf-cut: calc(0.42 * 0.72em + 0.05em); }
+    @container (max-width: 560px) {
+      .stf-title { --stf-cut-k: 0.86; }
+    }
+    .stf-word { display: inline-block; white-space: nowrap; }
+    .stf-ch {
+      display: inline-block;
+      transform: translateY(calc(var(--stf-cut) * var(--stf-cut-k)));
+      transition: transform 820ms var(--stf-ease-out);
+      transition-delay: min(calc(var(--i) * 26ms), 420ms);
+    }
+    .stf[data-intro="pending"] .stf-ch {
+      transform: translateY(104%);
+      transition: none;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .stf-title[data-slit="true"]:hover .stf-ch {
+        transform: translateY(0);
+        transition-duration: 420ms;
+        transition-delay: min(calc(var(--i) * 14ms), 220ms);
+      }
+    }
+
+    .stf-ticker {
+      margin-top: clamp(24px, 3cqi, 36px);
+      border-top: var(--stf-rule) solid rgba(122,16,20,.28);
+      border-bottom: var(--stf-rule) solid rgba(122,16,20,.28);
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: clamp(12px, 1.3cqi, 16px);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.55em 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stf-ticker-mask {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+    .stf-ticker-toggle {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      appearance: none;
+      border: 1px solid rgba(122,16,20,.25);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--k);
+      cursor: pointer;
+      transition: background-color 160ms ease, color 160ms ease;
+    }
+    .stf-ticker-toggle svg { width: 13px; height: 13px; }
+    .stf-ticker-toggle:hover { background: var(--k); color: var(--o); }
+    .stf-ticker-track { display: inline-flex; animation: stf-ticker 36s linear infinite; }
+    .stf-ticker:hover .stf-ticker-track,
+    .stf-ticker:focus-within .stf-ticker-track,
+    .stf-ticker[data-paused="true"] .stf-ticker-track { animation-play-state: paused; }
+    .stf-ticker-run { display: inline-flex; flex: none; }
+    .stf-ticker-run span { padding: 0 0.9em; }
+    .stf-ticker-run span::after { content: ""; display: inline-block; width: 0.36em; height: 0.36em; border-radius: 50%; background: #b5121b; margin-left: 1.8em; vertical-align: 0.14em; }
+    @keyframes stf-ticker { to { transform: translateX(-50%); } }
+
+    .stf-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      margin: clamp(28px, 3.6cqi, 48px) 0 clamp(20px, 2.5cqi, 32px);
+      align-items: end;
+    }
+    @container (min-width: 760px) {
+      .stf-meta { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 44px; }
+    }
+    .stf-intro {
+      margin: 0;
+      max-width: 36ch;
+      font-size: clamp(14px, 1.25cqi, 17px);
+      line-height: 1.55;
+      font-weight: 500;
+      color: #2b1719;
+    }
+    .stf-search { position: relative; }
+    .stf-search label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--k);
+      margin-bottom: 6px;
+    }
+    .stf-field { position: relative; display: flex; align-items: center; border-bottom: 1.5px solid var(--k); }
+    .stf-field svg { flex: none; width: 18px; height: 18px; margin-right: 10px; color: var(--k); }
+    .stf-field input {
+      flex: 1;
+      min-width: 0;
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: #2b1719;
+      font: inherit;
+      font-size: clamp(15px, 1.35cqi, 18px);
+      font-weight: 500;
+      padding: 8px 0 10px;
+      outline: none;
+      box-shadow: none !important;
+    }
+    .stf-field input::placeholder { color: rgba(43,23,25,.48); }
+    .stf-field input::-webkit-search-cancel-button { display: none; }
+    .stf-clear {
+      flex: none;
+      appearance: none;
+      border: 0;
+      background: none;
+      color: #b5121b;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+      padding: 8px 0 8px 12px;
+    }
+    .stf-count { margin-top: 8px; font-size: 12px; font-weight: 600; color: rgba(43,23,25,.65); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+
+    .stf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 clamp(20px, 2.4cqi, 28px); padding: 0; list-style: none; }
+    .stf-chip {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 1.5px solid rgba(122,16,20,.25);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--k);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms ease;
+    }
+    .stf-chip:hover { border-color: #b5121b; }
+    .stf-chip small { font-size: 11px; font-weight: 700; opacity: 0.7; font-variant-numeric: tabular-nums; }
+    .stf-chip[aria-pressed="true"] { background: var(--k); color: var(--o); border-color: var(--k); }
+    .stf-chip:active { transform: scale(0.97); }
+
+    .stf-list { margin: 0; padding: 0; list-style: none; border-bottom: var(--stf-rule) solid rgba(122,16,20,.25); }
+    .stf-item { position: relative; border-top: var(--stf-rule) solid rgba(122,16,20,.25); }
+    .stf-fill {
+      position: absolute;
+      top: calc(var(--stf-rule) * -1);
+      bottom: 0;
+      left: calc(var(--stf-gutter) * -1);
+      right: calc(var(--stf-gutter) * -1);
+      background: var(--k);
+      clip-path: inset(0 100% 0 0);
+      pointer-events: none;
+    }
+    .stf-item[data-state="open"] .stf-fill { clip-path: inset(0 0 0 0); transition: clip-path var(--stf-flood-in) var(--stf-ease-flood); }
+    .stf-item[data-state="closing"] .stf-fill { clip-path: inset(0 0 0 100%); transition: clip-path var(--stf-flood-out) var(--stf-ease-flood); }
+
+    .stf-h { margin: 0; font: inherit; }
+    .stf-btn {
+      position: relative;
+      display: block;
+      width: 100%;
+      appearance: none;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      background: none;
+      color: var(--k);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .stf-btn:focus-visible { outline: 2px solid #b5121b; outline-offset: 2px; }
+    .stf-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      min-height: 58px;
+      padding: clamp(14px, 1.7cqi, 22px) 0;
+      font-size: clamp(16px, 1.75cqi, 24px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .stf-btn:active .stf-plus { scale: 0.88; }
+    .stf-row--inv {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(var(--stf-gutter) * -1);
+      right: calc(var(--stf-gutter) * -1);
+      padding-left: var(--stf-gutter);
+      padding-right: var(--stf-gutter);
+      color: var(--o);
+      clip-path: inset(0 100% 0 0);
+      pointer-events: none;
+    }
+    .stf-item[data-state="open"] .stf-row--inv { clip-path: inset(0 0 0 0); transition: clip-path var(--stf-flood-in) var(--stf-ease-flood); }
+    .stf-item[data-state="closing"] .stf-row--inv { clip-path: inset(0 0 0 100%); transition: clip-path var(--stf-flood-out) var(--stf-ease-flood); }
+    .stf-row--inv .stf-mark { background: var(--o); color: var(--k); }
+
+    .stf-label { display: block; transition: transform 240ms var(--stf-ease-out); }
+    .stf-snippet { display: block; margin-top: 6px; font-size: 13px; font-weight: 500; line-height: 1.4; opacity: 0.88; }
+    .stf-cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: clamp(38px, 3.4cqi, 48px);
+      height: clamp(38px, 3.4cqi, 48px);
+      border-radius: 999px;
+    }
+    .stf-cell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--k);
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 220ms var(--stf-ease-out);
+    }
+    .stf-row--inv .stf-cell::before { display: none; }
+    .stf-plus {
+      position: relative;
+      display: block;
+      overflow: visible;
+      width: clamp(18px, 1.8cqi, 24px);
+      height: clamp(18px, 1.8cqi, 24px);
+      transition: transform 280ms var(--stf-ease-out), scale 120ms ease, color 160ms ease;
+    }
+    .stf-item[data-state="open"] .stf-plus { transform: rotate(135deg); transition-duration: var(--stf-flood-in); }
+    @media (hover: hover) and (pointer: fine) {
+      .stf-btn:hover .stf-label { transform: translateX(0.25em); }
+      .stf-item[data-state="closed"] .stf-btn:hover .stf-cell::before { clip-path: inset(0 0 0 0); }
+      .stf-item[data-state="closed"] .stf-btn:hover .stf-plus { color: var(--o); }
+    }
+    .stf-mark { background: #b5121b; color: #ffffff; padding: 0 3px; border-radius: 3px; }
+
+    .stf-panel {
+      position: relative;
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 240ms var(--stf-ease-out);
+    }
+    .stf-item[data-state="open"] .stf-panel { grid-template-rows: 1fr; transition: grid-template-rows 360ms var(--stf-ease-out); }
+    .stf-panel-in { overflow: hidden; min-height: 0; }
+    .stf-item[data-state="closed"] .stf-panel-in { visibility: hidden; }
+    .stf-answer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+      padding: 0 0 clamp(20px, 2.4cqi, 32px);
+      color: var(--o);
+    }
+    .stf-text {
+      max-width: 60ch;
+      font-size: clamp(14px, 1.25cqi, 16px);
+      line-height: 1.6;
+      font-weight: 400;
+    }
+    .stf-text p { margin: 0; }
+    .stf-text .stf-mark { background: var(--o); color: var(--k); }
+    .stf-tools { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; }
+    .stf-tag { padding: 3px 10px; border: 1px solid rgba(255,255,255,.55); border-radius: 999px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .stf-copy {
+      appearance: none;
+      border: 0;
+      background: none;
+      padding: 4px 0;
+      color: var(--o);
+      font: inherit;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+    @container (min-width: 760px) {
+      .stf-answer { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); column-gap: 44px; row-gap: 12px; }
+      .stf-text, .stf-tools { grid-column: 2; }
+    }
+
+    .stf-empty { padding: clamp(24px, 3.5cqi, 44px) 0; border-top: 1px solid rgba(122,16,20,.25); }
+    .stf-empty p { margin: 0 0 12px; font-size: 18px; font-weight: 700; color: var(--k); }
+    .stf-reset { color: #b5121b; font-size: 14px; font-weight: 700; }
+
+    .stf-contact {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px 24px;
+      margin-top: clamp(28px, 4cqi, 48px);
+    }
+    .stf-contact p { margin: 0; font-family: 'Playfair Display', Georgia, serif; font-size: clamp(20px, 2.2cqi, 30px); font-weight: 800; line-height: 1.15; color: var(--k); }
+    .stf-cta {
+      position: relative;
+      display: inline-flex;
+      min-height: 46px;
+      border: 1.5px solid var(--k);
+      border-radius: 999px;
+      overflow: hidden;
+      background: #fff;
+      color: var(--k);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: transform 140ms ease;
+    }
+    .stf-cta > span { display: inline-flex; align-items: center; gap: 10px; padding: 0 22px; }
+    .stf-cta > span + span {
+      position: absolute;
+      inset: 0;
+      background: var(--k);
+      color: var(--o);
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 360ms var(--stf-ease-flood);
+    }
+    .stf-cta svg { width: 16px; height: 16px; transition: transform 360ms var(--stf-ease-out); }
+    .stf-cta:hover > span + span,
+    .stf-cta:focus-visible > span + span { clip-path: inset(0 0 0 0); }
+    .stf-cta:hover svg,
+    .stf-cta:focus-visible svg { transform: translateX(4px); }
+    .stf-cta:active { transform: scale(0.98); }
+
+    .stf-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
     /* ---------- Modal, toast, dll ---------- */
     .bump { animation: bump .35s ease; }
     @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
@@ -185,17 +570,14 @@
     .stamp { animation: stamp .6s cubic-bezier(.2,1.4,.4,1) both; }
     @keyframes stamp { from { opacity: 0; transform: scale(1.6) rotate(-12deg); } to { opacity: 1; transform: scale(1) rotate(-6deg); } }
 
-    details summary { list-style: none; cursor: pointer; }
-    details summary::-webkit-details-marker { display: none; }
-    details[open] .faq-icon { transform: rotate(45deg); }
-    .faq-icon { transition: transform .25s; }
-
     input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(181,18,27,.15); border-color: #b5121b; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
       .reveal { opacity: 1; transform: none; }
       .dcb-letter, .dcb-arrive, .dcb-hop.is-hop { animation: none; }
+      .stf-ch, .stf[data-intro="pending"] .stf-ch { transform: none; transition: none; }
+      .stf-ticker-track { animation: none; }
     }
 
     @media print {
@@ -306,7 +688,7 @@
   <!-- ================= TOAST ================= -->
   <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-white text-sm px-5 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50 whitespace-nowrap"></div>
 
-  <!-- Smooth scroll ringan (Lenis). GSAP tidak lagi dipakai. -->
+  <!-- Smooth scroll ringan (Lenis) -->
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 
 <script>
@@ -335,7 +717,6 @@ const ARTISTS = [
 
 /* ==========================================================
    DATA PRODUK
-   Format: [artis, nama file (tanpa .png), nama tampilan, harga, status]
    ========================================================== */
 const RAW_PRODUCTS = [
   ['AESPA',     'AESPA BAG CHARM',                  'AESPA Bag Charm',                    75000, 'Siap Kirim'],
@@ -432,6 +813,70 @@ const PROVINCES = ['DKI Jakarta', 'Jawa Barat', 'Banten', 'Jawa Tengah', 'Jawa T
 
 const STATUS_UNPAID = 'Menunggu Pembayaran';
 const STATUS_PAID   = 'LUNAS / DIPROSES';
+
+/* ==========================================================
+   DATA FAQ FUNSTUFF (untuk Slit Type FAQ)
+   ========================================================== */
+const FAQ_CATEGORIES = ['Produk & Stok', 'Pengiriman', 'Pembayaran & Promo', 'Pesanan'];
+
+const FAQ_ITEMS = [
+  {
+    id: 'stok-ready-po',
+    category: 'Produk & Stok',
+    question: 'Produknya ready atau pre-order?',
+    answer: 'Setiap produk diberi label status yang jelas: Siap Kirim (stok tersedia dan dikirim dalam 1–2 hari kerja) atau Pre-Order (sedang diproduksi, estimasi pengiriman tertera di keranjang).'
+  },
+  {
+    id: 'kualitas-in-house',
+    category: 'Produk & Stok',
+    question: 'Apakah produknya melewati kontrol kualitas dulu?',
+    answer: 'Ya! Desain kami dikembangkan secara in-house dan setiap item (keychain shaker, pc holder, pin, hair clip, hingga carabiner) dicek sebelum dikemas agar tiba dalam kondisi rapi.'
+  },
+  {
+    id: 'ongkir-kurir',
+    category: 'Pengiriman',
+    question: 'Berapa ongkir dan kurir apa saja yang tersedia?',
+    answer: 'Gratis ongkir untuk pengiriman ke DKI Jakarta. Untuk luar DKI Jakarta tersedia JNE (Rp18.000), J&T (Rp16.000), dan SiCepat (Rp15.000) yang bisa dipilih saat checkout.'
+  },
+  {
+    id: 'barang-kurang-salah',
+    category: 'Pengiriman',
+    question: 'Bagaimana kalau barang kurang atau salah?',
+    answer: 'Segera hubungi CS WhatsApp kami maksimal 2x24 jam setelah paket diterima dengan melampirkan foto produk serta kemasan agar tim kami bisa bantu proses pengecekan.'
+  },
+  {
+    id: 'kode-kupon',
+    category: 'Pembayaran & Promo',
+    question: 'Bagaimana cara pakai kode kupon diskon?',
+    answer: 'Di halaman Keranjang, masukkan kode kupon seperti COERFUN10 (diskon 10%) atau FUNSTUFF15K (potongan Rp15.000), lalu klik Terapkan Kupon sebelum lanjut ke Checkout.'
+  },
+  {
+    id: 'metode-konfirmasi-bayar',
+    category: 'Pembayaran & Promo',
+    question: 'Metode pembayaran apa saja & cara konfirmasinya?',
+    answer: 'Kami menerima Transfer BCA, Transfer Mandiri, dan QRIS. Setelah checkout, buka halaman Invoice lalu klik Konfirmasi Pembayaran agar status otomatis menjadi LUNAS dan bisa dicetak/disimpan.'
+  },
+  {
+    id: 'cek-status-pesanan',
+    category: 'Pesanan',
+    question: 'Bagaimana cara cek status pesanan saya?',
+    answer: 'Masuk ke menu Akun setelah login. Di bagian Riwayat Pesanan Saya kamu bisa memantau status setiap pesanan (Menunggu Pembayaran atau LUNAS / DIPROSES) beserta detail invoicenya.'
+  },
+  {
+    id: 'batal-pesanan',
+    category: 'Pesanan',
+    question: 'Apakah pesanan bisa dibatalkan?',
+    answer: 'Pesanan bisa dibatalkan hanya sebelum nomor resi keluar. Hubungi CS WhatsApp dan sertakan nomor pesanan (contoh: FS-2026XXXX) agar dibantu.'
+  }
+];
+
+const FAQ_TICKER = [
+  'KUPON COERFUN10 DISKON 10%',
+  'FUNSTUFF15K POTONGAN RP15.000',
+  'GRATIS ONGKIR DKI JAKARTA',
+  'STOK SIAP KIRIM DARI INDONESIA',
+  '100% IN-HOUSE IP FANMERCH'
+];
 
 /* ==========================================================
    STORAGE (localStorage)
@@ -693,6 +1138,350 @@ function renderDoodleBanner() {
 }
 
 /* ==========================================================
+   SLIT TYPE FAQ (adaptasi 21st.dev, tema & WA Funstuff)
+   ========================================================== */
+const STF = {
+  openIds: new Set(['stok-ready-po']),
+  closingIds: new Set(),
+  closeTimers: {},
+  query: '',
+  category: null,
+  tickerPaused: false,
+  introDone: false,
+  io: null
+};
+
+function stfMatches(text, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const low = text.toLowerCase();
+  return words.every(w => low.includes(w));
+}
+
+function stfHighlight(text, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length || !text) return esc(text);
+  const low = text.toLowerCase();
+  const marks = new Array(text.length).fill(false);
+  for (const w of words) {
+    let at = low.indexOf(w);
+    while (at > -1) {
+      for (let k = at; k < at + w.length; k++) marks[k] = true;
+      at = low.indexOf(w, at + 1);
+    }
+  }
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    const hit = marks[i];
+    let j = i + 1;
+    while (j < text.length && marks[j] === hit) j++;
+    const chunk = esc(text.slice(i, j));
+    out += hit ? `<mark class="stf-mark">${chunk}</mark>` : chunk;
+    i = j;
+  }
+  return out;
+}
+
+function stfSnippet(text, q, radius = 42) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length || !text) return '';
+  const low = text.toLowerCase();
+  let at = -1;
+  for (const w of words) {
+    const idx = low.indexOf(w);
+    if (idx > -1 && (at < 0 || idx < at)) at = idx;
+  }
+  if (at < 0) return '';
+  let from = Math.max(0, at - radius);
+  let to = Math.min(text.length, at + radius * 2);
+  if (from > 0) from = text.indexOf(' ', from) + 1 || from;
+  if (to < text.length) to = text.lastIndexOf(' ', to) > at ? text.lastIndexOf(' ', to) : to;
+  return (from > 0 ? '…' : '') + text.slice(from, to).trim() + (to < text.length ? '…' : '');
+}
+
+function stfHeadlineHtml(text) {
+  let idx = 0;
+  const lines = text.split('\n');
+  return `
+    <h2 class="stf-title" id="stf-h" aria-label="${esc(lines.join(' '))}" data-slit="true">
+      ${lines.map(line => `
+        <span class="stf-line" aria-hidden="true">
+          ${line.split(' ').map((word, wi, words) => `
+            <span class="stf-word">${Array.from(word).map(ch => `<span class="stf-ch" style="--i:${idx++}">${esc(ch)}</span>`).join('')}</span>${wi < words.length - 1 ? ' ' : ''}
+          `).join('')}
+        </span>`).join('')}
+    </h2>`;
+}
+
+function renderSlitTypeFaq() {
+  const headline = 'Pertanyaan\nUmum';
+  return `
+  <section id="stf" class="stf reveal mt-20" data-intro="${STF.introDone ? 'done' : 'pending'}" aria-labelledby="stf-h">
+    <div class="stf-wrap">
+      ${stfHeadlineHtml(headline)}
+
+      <div class="stf-ticker" data-paused="${STF.tickerPaused ? 'true' : 'false'}">
+        <p class="stf-sr">${esc(FAQ_TICKER.join('. '))}</p>
+        <div class="stf-ticker-mask" aria-hidden="true">
+          <div class="stf-ticker-track">
+            ${[0, 1].map(() => `
+              <div class="stf-ticker-run">
+                ${[...FAQ_TICKER, ...FAQ_TICKER].map(t => `<span>${esc(t)}</span>`).join('')}
+              </div>`).join('')}
+          </div>
+        </div>
+        <button type="button" class="stf-ticker-toggle" data-stf="ticker" aria-label="${STF.tickerPaused ? 'Putar ticker' : 'Jeda ticker'}" aria-pressed="${STF.tickerPaused}">
+          ${STF.tickerPaused
+            ? '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2v10l8.5-5z" fill="currentColor"/></svg>'
+            : '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/></svg>'}
+        </button>
+      </div>
+
+      <div class="stf-meta">
+        <p class="stf-intro">Info cepat seputar stok ready vs pre-order, ongkir, kode kupon, konfirmasi pembayaran invoice, dan pesanan Funstuff.</p>
+        <div class="stf-search" role="search">
+          <label for="stf-q">Cari jawaban</label>
+          <div class="stf-field">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="6" stroke="currentColor" stroke-width="1.6"/>
+              <path d="m13 13 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input id="stf-q" type="search" autocomplete="off" spellcheck="false" value="${esc(STF.query)}" placeholder="Coba &ldquo;kupon&rdquo; atau &ldquo;ongkir&rdquo;" />
+            ${STF.query ? '<button type="button" class="stf-clear" data-stf="clear-q">Hapus</button>' : ''}
+          </div>
+          <div id="stf-count" class="stf-count" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <ul class="stf-chips" aria-label="Filter topik FAQ">
+        <li>
+          <button type="button" class="stf-chip" data-stf="cat" data-cat="" aria-pressed="${STF.category === null}">
+            Semua <small id="stf-cnt-all">${FAQ_ITEMS.length}</small>
+          </button>
+        </li>
+        ${FAQ_CATEGORIES.map(c => `
+          <li>
+            <button type="button" class="stf-chip" data-stf="cat" data-cat="${esc(c)}" aria-pressed="${STF.category === c}">
+              ${esc(c)} <small data-stf-cnt="${esc(c)}">0</small>
+            </button>
+          </li>`).join('')}
+      </ul>
+
+      <div id="stf-body"></div>
+
+      <div class="stf-contact">
+        <p>Masih ada yang bikin bingung?</p>
+        <a class="stf-cta" href="${WA_URL}" target="_blank" rel="noopener">
+          <span>Chat CS WhatsApp <svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9h11M10 4.5 14.5 9 10 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span aria-hidden="true">Chat CS WhatsApp <svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9h11M10 4.5 14.5 9 10 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </div>
+      <span id="stf-live" class="stf-sr" aria-live="polite"></span>
+    </div>
+  </section>`;
+}
+
+function drawSlitTypeFaqList() {
+  const body = $('#stf-body');
+  if (!body) return;
+
+  const counts = {};
+  let allMatch = 0;
+  FAQ_ITEMS.forEach(it => {
+    if (stfMatches(it.question + ' ' + it.answer, STF.query)) {
+      allMatch++;
+      if (it.category) counts[it.category] = (counts[it.category] || 0) + 1;
+    }
+  });
+
+  const cntAll = $('#stf-cnt-all');
+  if (cntAll) cntAll.textContent = String(allMatch);
+  document.querySelectorAll('[data-stf-cnt]').forEach(el => {
+    el.textContent = String(counts[el.dataset.stfCnt] || 0);
+  });
+
+  document.querySelectorAll('.stf-chip').forEach(btn => {
+    const c = btn.dataset.cat || null;
+    btn.setAttribute('aria-pressed', String(c === STF.category));
+  });
+
+  const visible = FAQ_ITEMS.filter(it =>
+    (!STF.category || it.category === STF.category) &&
+    stfMatches(it.question + ' ' + it.answer, STF.query)
+  );
+
+  const countEl = $('#stf-count');
+  const filtering = STF.query.trim() !== '' || STF.category !== null;
+  if (countEl) {
+    countEl.textContent = filtering ? `${visible.length} dari ${FAQ_ITEMS.length} pertanyaan` : '';
+  }
+
+  if (!visible.length) {
+    body.innerHTML = `
+      <div class="stf-empty" role="status">
+        <p>Belum ada jawaban untuk &ldquo;${esc(STF.query.trim() || STF.category)}&rdquo;.</p>
+        <button type="button" class="stf-copy stf-reset" data-stf="reset">Tampilkan semua pertanyaan</button>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = `
+    <ul class="stf-list" aria-label="Daftar pertanyaan">
+      ${visible.map((it, idx) => {
+        const isOpen = STF.openIds.has(it.id);
+        const state = isOpen ? 'open' : STF.closingIds.has(it.id) ? 'closing' : 'closed';
+        const btnId = 'stf-b-' + it.id;
+        const panelId = 'stf-p-' + it.id;
+        const snip = STF.query.trim() && !isOpen ? stfSnippet(it.answer, STF.query) : '';
+        const rowHtml = inv => `
+          <span class="stf-row${inv ? ' stf-row--inv' : ''}" ${inv ? 'aria-hidden="true"' : ''}>
+            <span class="stf-label">
+              ${stfHighlight(it.question, STF.query)}
+              ${snip ? `<span class="stf-snippet">${stfHighlight(snip, STF.query)}</span>` : ''}
+            </span>
+            <span class="stf-cell" aria-hidden="true">
+              <svg class="stf-plus" viewBox="0 0 32 32" fill="none"><path d="M16 1v30M1 16h30" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+          </span>`;
+        return `
+          <li id="faq-${esc(it.id)}" class="stf-item" data-state="${state}">
+            <span class="stf-fill" aria-hidden="true"></span>
+            <h3 class="stf-h">
+              <button id="${btnId}" type="button" class="stf-btn" data-stf="toggle" data-id="${esc(it.id)}" data-pos="${idx}" aria-expanded="${isOpen}" aria-controls="${panelId}">
+                ${rowHtml(false)}
+                ${rowHtml(true)}
+              </button>
+            </h3>
+            <div class="stf-panel" id="${panelId}" role="region" aria-labelledby="${btnId}">
+              <div class="stf-panel-in">
+                <div class="stf-answer">
+                  <div class="stf-text"><p>${stfHighlight(it.answer, STF.query)}</p></div>
+                  <div class="stf-tools">
+                    ${it.category ? `<span class="stf-tag">${esc(it.category)}</span>` : ''}
+                    <button type="button" class="stf-copy" data-stf="copy" data-id="${esc(it.id)}">Salin link</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>`;
+      }).join('')}
+    </ul>`;
+}
+
+function initSlitTypeFaq() {
+  const root = $('#stf');
+  if (!root) return;
+  drawSlitTypeFaqList();
+
+  if (STF.io) { STF.io.disconnect(); STF.io = null; }
+  if (!STF.introDone && 'IntersectionObserver' in window) {
+    STF.io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) {
+        STF.introDone = true;
+        requestAnimationFrame(() => root.setAttribute('data-intro', 'done'));
+        STF.io.disconnect();
+      }
+    }, { threshold: 0.12 });
+    STF.io.observe(root);
+  } else {
+    STF.introDone = true;
+    root.setAttribute('data-intro', 'done');
+  }
+}
+
+function teardownSlitTypeFaq() {
+  if (STF.io) { STF.io.disconnect(); STF.io = null; }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-stf]');
+  if (!t) return;
+  const act = t.dataset.stf;
+
+  if (act === 'toggle') {
+    const id = t.dataset.id;
+    const isOpen = STF.openIds.has(id);
+    if (isOpen) {
+      STF.openIds.delete(id);
+      STF.closingIds.add(id);
+      clearTimeout(STF.closeTimers[id]);
+      STF.closeTimers[id] = setTimeout(() => {
+        STF.closingIds.delete(id);
+        drawSlitTypeFaqList();
+      }, 300);
+    } else {
+      STF.openIds.clear();
+      STF.openIds.add(id);
+      STF.closingIds.delete(id);
+      clearTimeout(STF.closeTimers[id]);
+    }
+    drawSlitTypeFaqList();
+  } else if (act === 'cat') {
+    const c = t.dataset.cat || null;
+    STF.category = STF.category === c ? null : c;
+    drawSlitTypeFaqList();
+  } else if (act === 'clear-q') {
+    STF.query = '';
+    const inp = $('#stf-q');
+    if (inp) inp.value = '';
+    render();
+  } else if (act === 'reset') {
+    STF.query = '';
+    STF.category = null;
+    const inp = $('#stf-q');
+    if (inp) inp.value = '';
+    render();
+  } else if (act === 'ticker') {
+    STF.tickerPaused = !STF.tickerPaused;
+    const tk = $('.stf-ticker');
+    if (tk) tk.setAttribute('data-paused', STF.tickerPaused ? 'true' : 'false');
+    t.setAttribute('aria-pressed', String(STF.tickerPaused));
+    t.setAttribute('aria-label', STF.tickerPaused ? 'Putar ticker' : 'Jeda ticker');
+    t.innerHTML = STF.tickerPaused
+      ? '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2v10l8.5-5z" fill="currentColor"/></svg>'
+      : '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/></svg>';
+  } else if (act === 'copy') {
+    const id = t.dataset.id;
+    const url = location.origin + location.pathname + location.search + '#/bantuan';
+    copyText(url + ' (' + id + ')');
+    const live = $('#stf-live');
+    if (live) live.textContent = 'Link tersalin';
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'stf-q') {
+    STF.query = e.target.value;
+    drawSlitTypeFaqList();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.id === 'stf-q' && e.key === 'Escape' && STF.query) {
+    e.preventDefault();
+    STF.query = '';
+    e.target.value = '';
+    drawSlitTypeFaqList();
+  }
+  const btn = e.target.closest && e.target.closest('.stf-btn');
+  if (btn) {
+    const btns = [...document.querySelectorAll('.stf-btn')];
+    const idx = btns.indexOf(btn);
+    if (!btns.length || idx < 0) return;
+    let next = -1;
+    if (e.key === 'ArrowDown') next = (idx + 1) % btns.length;
+    else if (e.key === 'ArrowUp') next = (idx - 1 + btns.length) % btns.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = btns.length - 1;
+    if (next >= 0) {
+      e.preventDefault();
+      btns[next].focus();
+    }
+  }
+});
+
+/* ==========================================================
    HALAMAN BERANDA
    ========================================================== */
 function renderShowcase() {
@@ -798,7 +1587,7 @@ function renderHome() {
     </div>
   </section>
 
-  <!-- SHOWCASE SCROLL (5 foto produk, tanpa tombol) -->
+  <!-- SHOWCASE SCROLL -->
   ${renderShowcase()}
 
   <!-- PRODUK TERBARU -->
@@ -833,7 +1622,10 @@ function renderHome() {
         <p class="text-sm text-ink/70 mt-2 leading-relaxed">Data pribadi dan pembayaranmu diproses dengan sistem yang aman dan terenkripsi.</p>
       </div>
     </div>
-  </section>`;
+  </section>
+
+  <!-- SLIT TYPE FAQ (21st.dev adapted) -->
+  ${renderSlitTypeFaq()}`;
 }
 
 /* ==========================================================
@@ -916,48 +1708,18 @@ function renderAbout() {
   </section>`;
 }
 
-function faqItem(q, a) {
-  return `
-  <details class="group card px-5 py-4">
-    <summary class="flex items-center justify-between font-semibold text-sm text-maroon">
-      <span>${q}</span>
-      <span class="faq-icon text-2xl text-brand leading-none">+</span>
-    </summary>
-    <p class="text-sm text-ink/70 mt-3 leading-relaxed">${a}</p>
-  </details>`;
-}
-
 function renderHelp() {
   return `
-  <section class="fade-in max-w-3xl mx-auto">
-    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon text-center">Bantuan</h1>
-
-    <div class="mt-10 bg-sand border border-maroon/10 rounded-2xl p-6">
+  <section class="fade-in max-w-4xl mx-auto">
+    <div class="bg-sand border border-maroon/10 rounded-2xl p-6 mb-8">
       <h2 class="font-display text-lg font-bold uppercase tracking-wider text-maroon text-center">Pembatalan Pesanan</h2>
-      <div class="mt-4 space-y-2 text-sm text-ink/80 leading-relaxed">
+      <div class="mt-3 space-y-1.5 text-sm text-ink/80 leading-relaxed text-center">
         <p>Pesanan bisa dibatalkan hanya sebelum nomor resi keluar. Setelah resi keluar, pesanan tidak bisa dibatalkan.</p>
         <p>Untuk membatalkan, hubungi CS lewat WhatsApp dan sertakan nomor pesanan (contoh: FS-2026XXXX).</p>
       </div>
     </div>
 
-    <h2 class="font-display text-lg font-bold uppercase tracking-wider text-maroon text-center mt-12">Pertanyaan Umum</h2>
-    <div class="space-y-3 mt-6">
-      ${faqItem('Produknya ready atau pre-order?', 'Setiap produk diberi label status yang jelas: <strong>Siap Kirim</strong> (stok tersedia dan dikirim dalam 1–2 hari kerja) atau <strong>Pre-Order</strong> (sedang diproduksi, estimasi pengiriman tertera di halaman produk).')}
-      ${faqItem('Apakah album dijamin tersegel?', 'Ya. Kami memastikan album dikemas dengan rapi dan dicek kondisinya sebelum dikirim. Jika kondisi segel tidak sesuai, silakan hubungi CS kami.')}
-      ${faqItem('Bagaimana kalau barang kurang atau salah?', 'Segera hubungi CS WhatsApp kami maksimal 2x24 jam setelah barang diterima, dengan melampirkan foto produk dan kemasan.')}
-      ${faqItem('Bagaimana cara cek status pesanan?', 'Buka menu <strong>Akun</strong> setelah login. Di sana ada Riwayat Pesanan Saya beserta status masing-masing pesanan (Menunggu Pembayaran atau LUNAS / DIPROSES).')}
-      ${faqItem('Bisa membatalkan pesanan?', 'Bisa, selama nomor resi belum keluar. Lihat bagian Pembatalan Pesanan di atas untuk langkah lengkapnya.')}
-      ${faqItem('Metode pembayaran apa saja?', 'Transfer BCA, Transfer Mandiri, dan QRIS. Instruksi pembayaran muncul di halaman Invoice setelah checkout.')}
-      ${faqItem('Bagaimana cara pembayaran berjalan?', 'Selesaikan pembayaran sesuai nominal yang tertera, lalu klik <strong>Konfirmasi Pembayaran</strong>. Invoice akan langsung berstatus <strong>LUNAS</strong> dan bisa kamu cetak atau simpan sebagai PDF dari browser.')}
-    </div>
-
-    <div class="mt-10 card p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div>
-        <p class="font-bold text-maroon">Masih butuh bantuan?</p>
-        <p class="text-sm text-ink/70">Tim CS kami siap membantu via WhatsApp setiap hari.</p>
-      </div>
-      <a href="${WA_URL}" target="_blank" rel="noopener" class="btn-primary px-6 py-3 rounded-full text-sm font-semibold">Chat CS WhatsApp</a>
-    </div>
+    ${renderSlitTypeFaq()}
   </section>`;
 }
 
@@ -1389,7 +2151,7 @@ function renderInvoice(id) {
 function copyText(text) {
   if (!navigator.clipboard) return showToast('Salin nomor secara manual');
   navigator.clipboard.writeText(text)
-    .then(() => showToast('Nomor rekening disalin'))
+    .then(() => showToast('Link / nomor disalin'))
     .catch(() => showToast('Gagal menyalin, salin manual'));
 }
 
@@ -1614,7 +2376,7 @@ document.addEventListener('mouseover', e => {
 });
 
 /* ==========================================================
-   SHOWCASE SCROLL (5 foto produk)
+   SHOWCASE SCROLL
    ========================================================== */
 function setupShowcase() {
   const wrap = $('#sc-wrap');
@@ -1732,7 +2494,7 @@ function initSmoothScroll() {
 }
 
 /* ==========================================================
-   DOODLE CREW BANNER (adaptasi 21st.dev, vanilla JS + SVG)
+   DOODLE CREW BANNER
    ========================================================== */
 const DCB_FONT_SIZE = 200;
 const DCB_FONT = "'Playfair Display', Georgia, serif";
@@ -2316,6 +3078,7 @@ function render() {
 
   teardownShowcase();
   destroyDoodleBanner();
+  teardownSlitTypeFaq();
   app.innerHTML = view ? view(param) : renderNotFound();
 
   document.querySelectorAll('[data-nav]').forEach(a => {
@@ -2329,7 +3092,9 @@ function render() {
     attachHeroSwipe();
     setupShowcase();
     initDoodleBanner();
+    initSlitTypeFaq();
   }
+  if (page === 'bantuan') initSlitTypeFaq();
   if (page === 'katalog') drawCatalogGrid();
   if (page === 'checkout') drawCheckoutTotals();
   updateBadge();
