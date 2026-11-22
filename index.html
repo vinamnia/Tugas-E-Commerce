@@ -146,12 +146,12 @@
 
     /* ---------- Doodle banner (adaptasi 21st.dev, vanilla JS + SVG) ---------- */
     .dcb { position: relative; overflow: hidden; border-radius: 1.75rem; background: #fbf6f1; border: 1px solid #efe2da; padding: 1.25rem 1.25rem 1rem; }
-    .dcb-world { position: relative; height: clamp(170px, 24vw, 250px); }
+    .dcb-world { position: relative; height: clamp(210px, 28vw, 290px); width: 100%; }
     .dcb-doodles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
     .dcb-doodle { position: absolute; left: 0; top: 0; opacity: .9; will-change: transform; }
     .dcb-doodle svg { display: block; }
     .dcb-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
-    .dcb-ink { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; fill: #7a1014; }
+    .dcb-ink { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; fill: #7a1014; letter-spacing: -0.02em; }
     .dcb-letter { animation: dcbRise .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d); }
     @keyframes dcbRise { from { opacity: 0; transform: translate3d(0,40px,0); } to { opacity: 1; transform: none; } }
     .dcb-arrive { animation: dcbDrop .6s cubic-bezier(.2,1.3,.4,1) both; animation-delay: var(--d); }
@@ -231,7 +231,6 @@
           </svg>
           <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-brand text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">0</span>
         </a>
-        <!-- Isi link akun diatur oleh JavaScript (ikon atau nama user) -->
         <a id="account-link" href="#/akun" class="flex items-center gap-2 p-1 pr-3 rounded-full text-maroon hover:bg-blush/50 transition-colors"></a>
         <button id="menu-btn" aria-label="Menu" class="md:hidden p-2 rounded-full text-maroon hover:bg-blush/50">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -371,7 +370,6 @@ const RAW_PRODUCTS = [
   ['TXT',       'TXT KEYCHAIN SHAKER',              'TXT Keychain Shaker',                80000, 'Siap Kirim']
 ];
 
-/* Jenis produk ditentukan dari nama file (untuk spesifikasi dan emoji fallback) */
 function productKind(file) {
   if (/SHAKER/.test(file))      return { kind: 'Keychain Shaker', emoji: '🔑' };
   if (/KEYCHAIN/.test(file))    return { kind: 'Keychain',       emoji: '🔑' };
@@ -405,14 +403,12 @@ const PRODUCTS = RAW_PRODUCTS.map(([artist, file, name, price, status], idx) => 
   };
 });
 
-/* Slide hero: memakai produk yang sama dengan katalog (berdasarkan id) */
 const HERO_SLIDES = [
   { tag: 'Keychain Shaker', title: 'COTL VER', sub: 'Cortis Keychain Shaker 6 x 6 cm', detail: 'Tema resmi Coer · Siap kirim ke seluruh Indonesia', pid: 'p10' },
   { tag: 'Keychain Shaker', title: 'AESPA',    sub: 'AESPA Keychain Shaker',            detail: 'Koleksi penggemar AESPA · Siap kirim',             pid: 'p3'  },
   { tag: 'Holiday Edition', title: 'HOLIDAY',  sub: 'SEVENTEEN Keychain Shaker Holiday', detail: 'Edisi terbatas · Stok siap kirim',                pid: 'p24' }
 ];
 
-/* Showcase scroll: hanya 5 foto produk (tanpa tombol) */
 const SHOWCASE = ['p10', 'p3', 'p24', 'p22', 'p30'].map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
 
 const COUPONS = {
@@ -439,9 +435,6 @@ const STATUS_PAID   = 'LUNAS / DIPROSES';
 
 /* ==========================================================
    STORAGE (localStorage)
-   Catatan: ini simulasi untuk demo/tugas. Pembayaran sungguhan
-   membutuhkan payment gateway (Midtrans/Xendit) yang memberi
-   notifikasi (webhook) ke server, dan password wajib di-hash.
    ========================================================== */
 const CART_KEY = 'funstuff_cart';
 const USERS_KEY = 'funstuff_users';
@@ -507,7 +500,6 @@ const inputCls = 'w-full rounded-xl border border-maroon/15 bg-white px-4 py-3 t
 const labelCls = 'block text-sm font-semibold text-maroon mb-1';
 const mediaBg = 'bg-[#f5ece6]';
 
-/* Fallback: jika foto gagal dimuat, img diganti dengan emoji. */
 function imgFail(el) {
   const span = document.createElement('span');
   span.className = 'w-full h-full flex items-center justify-center text-5xl';
@@ -515,7 +507,6 @@ function imgFail(el) {
   el.replaceWith(span);
 }
 
-/* Tag foto produk: <img src="${p.image}" class="w-full h-full object-cover"> + fallback emoji */
 function productMedia(p, cls = 'w-full h-full object-cover') {
   return `<img src="${esc(p.image)}" alt="${esc(p.name)}" data-emoji="${p.emoji}" loading="lazy" decoding="async" class="${cls}" onerror="imgFail(this)" />`;
 }
@@ -681,7 +672,6 @@ function emptyCartView() {
 
 /* ==========================================================
    DOODLE BANNER (di atas Beranda)
-   Markup banner. Logika animasinya ada di bagian DOODLE CREW BANNER.
    ========================================================== */
 function renderDoodleBanner() {
   return `
@@ -1226,10 +1216,6 @@ function handleCheckoutSubmit(form) {
 
 /* ==========================================================
    PEMBAYARAN OTOMATIS -> STATUS LUNAS
-   Dipicu saat tombol "Konfirmasi Pembayaran" diklik.
-   Status langsung LUNAS, tersimpan di localStorage (dan
-   tampil di Riwayat Pesanan), lalu GA4 purchase dikirim
-   tepat satu kali per pesanan.
    ========================================================== */
 function markPaid(id) {
   const orders = getOrders();
@@ -1577,8 +1563,6 @@ function renderNotFound() {
 
 /* ==========================================================
    HERO SLIDER
-   Autoplay 5 detik, berhenti saat kursor di atas banner,
-   bisa digeser (swipe) di layar sentuh, dan progress bar.
    ========================================================== */
 function heroGo(i) {
   const n = HERO_SLIDES.length;
@@ -1631,11 +1615,6 @@ document.addEventListener('mouseover', e => {
 
 /* ==========================================================
    SHOWCASE SCROLL (5 foto produk)
-   - Posisi dihitung dari progres scroll bagian #sc-wrap.
-   - Hanya transform & opacity yang diubah (GPU-friendly).
-   - Satu listener scroll pasif + requestAnimationFrame,
-     tidak ada pinning atau scroll-lock, sehingga halaman
-     tetap bisa di-scroll dengan lancar.
    ========================================================== */
 function setupShowcase() {
   const wrap = $('#sc-wrap');
@@ -1717,9 +1696,7 @@ function teardownShowcase() {
 }
 
 /* ==========================================================
-   REVEAL ON SCROLL (IntersectionObserver, ringan)
-   Elemen ber-class .reveal akan diberi .is-in saat masuk layar
-   lalu tidak diamati lagi.
+   REVEAL ON SCROLL
    ========================================================== */
 function setupReveal() {
   if (revealIO) { revealIO.disconnect(); revealIO = null; }
@@ -1741,7 +1718,7 @@ function setupReveal() {
 }
 
 /* ==========================================================
-   SMOOTH SCROLL (LENIS) - ringan, tanpa GSAP
+   SMOOTH SCROLL (LENIS)
    ========================================================== */
 function initSmoothScroll() {
   if (!window.Lenis) return;
@@ -1756,11 +1733,6 @@ function initSmoothScroll() {
 
 /* ==========================================================
    DOODLE CREW BANNER (adaptasi 21st.dev, vanilla JS + SVG)
-   - Hanya aktif di Beranda.
-   - Loop animasi berhenti saat banner tidak terlihat, tab
-     tidak aktif, atau pindah halaman.
-   - Maksimal 6 doodle. Tanpa filter SVG (turbulence) yang berat.
-   - Dihormati prefers-reduced-motion.
    ========================================================== */
 const DCB_FONT_SIZE = 200;
 const DCB_FONT = "'Playfair Display', Georgia, serif";
@@ -1775,7 +1747,7 @@ const DCB_CREW = [
   { kind: 'cat',      letter: 7, seat: 'front',  offset: 0.42, flip: true, name: 'Patch', says: 'Pakai FUNSTUFF15K, hemat Rp15.000!' }
 ];
 
-const DCB_DOODLES = ['flame', 'star', 'heart', 'bolt', 'sparkle', 'plane']; // maksimal 6
+const DCB_DOODLES = ['flame', 'star', 'heart', 'bolt', 'sparkle', 'plane'];
 const DCB_COLORS = { flame: '#b5121b', flameCore: '#f2b96b', star: '#d9a441', heart: '#e0607e', bolt: '#c98a1b', sparkle: '#e9a0ab', plane: '#7a1014', cream: '#fbf6f1' };
 
 const DCB_ART = {
@@ -2094,15 +2066,14 @@ function dcbDoodles(dt, t) {
   dcbPaintDoodles();
 }
 
-/* Arah pandang mata dalam koordinat lokal karakter (sudah memperhitungkan flip & scale) */
 function dcbAim(p, eye, tx, ty) {
-  const lx = (tx - p.x) * p.flip / p.scale;
+  const lx = ((tx - p.x) / p.scale) * p.flip;
   const ly = (ty - p.y) / p.scale;
   const dx = lx - eye.x, dy = ly - eye.y;
   const d = Math.hypot(dx, dy);
-  if (d < 1e-6) return { x: 0, y: 0 };
+  if (!Number.isFinite(d) || d < 1e-6) return { x: 0, y: 0 };
   const m = eye.max * Math.min(1, d / 220);
-  return { x: (dx / d) * m, y: (dy / d) * m };
+  return { x: (dx / d) * m * p.flip, y: (dy / d) * m };
 }
 
 function dcbLook(dt, t) {
@@ -2352,6 +2323,8 @@ function render() {
   });
 
   if (page === 'beranda') {
+    window.scrollTo(0, 0);
+    if (lenis) lenis.scrollTo(0, { immediate: true });
     heroGo(heroIndex);
     attachHeroSwipe();
     setupShowcase();
@@ -2376,7 +2349,6 @@ function onRouteChange() {
     page_path: location.hash || '#/beranda'
   });
 
-  // GA4: begin_checkout saat pengguna masuk halaman checkout
   if (page === 'checkout') {
     const { items, subtotal } = cartSummary();
     if (items.length) {
