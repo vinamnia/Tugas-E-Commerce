@@ -496,4 +496,789 @@ const getOrders = () => LS.get(ORDERS_KEY, []);
 const setOrders = o => LS.set(ORDERS_KEY, o);
 
 function setSession(username, remember) {
-  localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_
+  localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
+  (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, username);
+}
+function clearSession() { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); }
+function currentUser() {
+  const username = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+  return username ? (getUsers().find(u => u.username === username) || null) : null;
+}
+
+let cart = LS.get(CART_KEY, []);
+let coupon = null;
+let authMode = 'login';
+let artistFilter = 'ALL';
+let searchQuery = '';
+let heroIndex = 0;
+let heroPaused = false;
+let lenis = null;
+let showcaseCleanup = null;
+let revealIO = null;
+
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const formatRp = n => 'Rp' + Number(n).toLocaleString('id-ID');
+const formatDate = iso => new Date(iso).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+const getProduct = id => PRODUCTS.find(p => p.id === id);
+const inputCls = 'w-full rounded-xl border border-maroon/15 bg-white px-4 py-3 text-sm transition';
+const labelCls = 'block text-sm font-semibold text-maroon mb-1';
+const mediaBg = 'bg-[#f5ece6]';
+
+function imgFail(el) {
+  const span = document.createElement('span');
+  span.className = 'w-full h-full flex items-center justify-center text-5xl';
+  span.textContent = el.dataset.emoji || '🎁';
+  el.replaceWith(span);
+}
+
+function productMedia(p, cls = 'w-full h-full object-cover') {
+  return `<img src="${esc(p.image)}" alt="${esc(p.name)}" data-emoji="${p.emoji}" loading="lazy" decoding="async" class="${cls}" onerror="imgFail(this)" />`;
+}
+
+function showToast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.remove('opacity-0');
+  t.classList.add('opacity-100');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => { t.classList.remove('opacity-100'); t.classList.add('opacity-0'); }, 2400);
+}
+
+function trackEvent(name, params = {}) { if (typeof gtag === 'function') gtag('event', name, params); }
+
+function cartSummary() {
+  const items = cart.map(c => ({ ...c, product: getProduct(c.id) })).filter(i => i.product);
+  const subtotal = items.reduce((sum, i) => sum + i.product.price * i.qty, 0);
+  return { items, subtotal };
+}
+
+function calcDiscount(subtotal) {
+  if (!coupon) return 0;
+  return coupon.type === 'percent' ? Math.round(subtotal * coupon.value / 100) : Math.min(coupon.value, subtotal);
+}
+
+function calcShipping(province, courierKey) {
+  return province === 'DKI Jakarta' ? 0 : (COURIERS[courierKey] || COURIERS.JNE).fee;
+}
+
+function saveCart() { LS.set(CART_KEY, cart); updateBadge(true); }
+
+function updateBadge(bump = false) {
+  const count = cart.reduce((s, c) => s + c.qty, 0);
+  const badge = $('#cart-badge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+  if (bump && count > 0) { badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump'); }
+}
+
+function updateAccountLink() {
+  const link = $('#account-link');
+  const user = currentUser();
+  if (user) {
+    link.innerHTML = `<span class="w-8 h-8 rounded-full bg-maroon text-white text-xs font-bold flex items-center justify-center shrink-0">${esc(user.name.charAt(0).toUpperCase())}</span><span class="text-sm font-semibold text-maroon max-w-[100px] truncate">${esc(user.name.split(' ')[0])}</span>`;
+  } else {
+    link.innerHTML = `<span class="p-1.5 rounded-full flex items-center justify-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>`;
+  }
+}
+
+function parseRoute() {
+  const raw = location.hash.replace(/^#\/?/, '');
+  const [page, ...rest] = raw.split('/');
+  let param = rest.join('/');
+  try { param = decodeURIComponent(param); } catch (e) {}
+  return { page: page || 'beranda', param };
+}
+
+function addToCart(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  if (p.status === 'Stok Habis') return showToast('Maaf, stok produk ini sedang habis');
+  const existing = cart.find(c => c.id === id);
+  if (existing) existing.qty += 1;
+  else cart.push({ id, qty: 1 });
+  saveCart();
+  showToast(`${p.name} ditambahkan ke keranjang`);
+  trackEvent('add_to_cart', { currency: 'IDR', value: p.price, items: [{ item_id: id, item_name: p.name, price: p.price, quantity: 1 }] });
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  saveCart(); render();
+}
+
+function removeItem(id) {
+  cart = cart.filter(c => c.id !== id);
+  saveCart(); render(); showToast('Produk dihapus dari keranjang');
+}
+
+function productStatusBadge(status) {
+  return { 'Siap Kirim': 'bg-emerald-50 text-emerald-700 border border-emerald-200', 'Pre-Order': 'bg-violet-50 text-violet-700 border border-violet-200', 'Stok Habis': 'bg-brand text-white' }[status] || 'bg-gray-100 text-gray-600';
+}
+
+function orderStatusBadge(status) {
+  return status === STATUS_PAID ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-700';
+}
+
+function productCard(p) {
+  const habis = p.status === 'Stok Habis';
+  return `
+  <article class="product-card card p-4 flex flex-col">
+    <div class="relative aspect-square rounded-2xl ${mediaBg} overflow-hidden">
+      ${productMedia(p)}
+      <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded-full ${productStatusBadge(p.status)}">${p.status.toUpperCase()}</span>
+    </div>
+    <p class="mt-4 text-[11px] font-semibold text-brand uppercase tracking-wider">${p.artist}</p>
+    <h3 class="font-semibold leading-snug text-sm line-clamp-2 min-h-[2.5rem] mt-1">${p.name}</h3>
+    <p class="text-xs text-ink/60 mt-1 line-clamp-2">${p.short}</p>
+    <p class="font-bold text-maroon mt-3">${formatRp(p.price)}</p>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <button data-action="detail" data-id="${p.id}" class="btn-ghost rounded-full py-2 text-xs font-semibold">Detail</button>
+      <button data-action="add" data-id="${p.id}" ${habis ? 'disabled' : ''} class="btn-primary rounded-full py-2 text-xs font-semibold">${habis ? 'Habis' : '+ Keranjang'}</button>
+    </div>
+  </article>`;
+}
+
+function emptyCartView() {
+  return `<section class="fade-in text-center py-20"><div class="text-7xl">🛒</div><h1 class="font-display text-3xl font-bold uppercase text-maroon mt-4">Keranjangmu masih kosong</h1><p class="text-ink/60 mt-2">Yuk, cari merch K-Pop favoritmu!</p><a href="#/katalog" class="btn-primary inline-block mt-6 px-7 py-3 rounded-full text-sm font-semibold">Lihat Katalog</a></section>`;
+}
+
+function renderDoodleBanner() {
+  return `
+  <section id="dcb" class="dcb fade-in mb-8" aria-label="FUNSTUFF">
+    <h2 class="sr-only">FUNSTUFF</h2>
+    <div id="dcb-world" class="dcb-world">
+      <div id="dcb-doodles" class="dcb-doodles" aria-hidden="true"></div>
+      <svg id="dcb-svg" class="dcb-svg" role="group" aria-label="Kenalan sama crew FUNSTUFF"></svg>
+      <div id="dcb-bubble" class="dcb-bubble" aria-live="polite"></div>
+    </div>
+    <div class="dcb-foot">
+      <p class="dcb-tag">Merch K-Pop yang bikin hari kamu makin fun ✨<small>Klik karakternya, pasti ada yang nyapa 👀</small></p>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-[11px] font-semibold text-maroon bg-white border border-maroon/15 rounded-full px-3 py-2">Kupon: COERFUN10</span>
+        <a href="#/katalog" class="btn-primary px-5 py-2.5 rounded-full text-xs font-semibold">Belanja Sekarang</a>
+      </div>
+    </div>
+  </section>`;
+}
+
+const STF = { openIds: new Set(['stok-ready-po']), closingIds: new Set(), closeTimers: {}, query: '', category: null, tickerPaused: false, introDone: false, io: null };
+
+function stfMatches(text, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const low = text.toLowerCase();
+  return words.every(w => low.includes(w));
+}
+
+function stfHighlight(text, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length || !text) return esc(text);
+  const low = text.toLowerCase();
+  const marks = new Array(text.length).fill(false);
+  for (const w of words) {
+    let at = low.indexOf(w);
+    while (at > -1) { for (let k = at; k < at + w.length; k++) marks[k] = true; at = low.indexOf(w, at + 1); }
+  }
+  let out = '', i = 0;
+  while (i < text.length) {
+    const hit = marks[i]; let j = i + 1;
+    while (j < text.length && marks[j] === hit) j++;
+    const chunk = esc(text.slice(i, j));
+    out += hit ? `<mark class="stf-mark">${chunk}</mark>` : chunk;
+    i = j;
+  }
+  return out;
+}
+
+function stfHeadlineHtml(text) {
+  let idx = 0;
+  return `<h2 class="stf-title" id="stf-h">${text.split('\n').map(line => `<span class="stf-line">${line.split(' ').map((word, wi, words) => `<span class="stf-word">${Array.from(word).map(ch => `<span class="stf-ch" style="--i:${idx++}">${esc(ch)}</span>`).join('')}</span>${wi < words.length - 1 ? ' ' : ''}`).join('')}</span>`).join('')}</h2>`;
+}
+
+function renderSlitTypeFaq() {
+  return `
+  <section id="stf" class="stf reveal mt-20" data-intro="${STF.introDone ? 'done' : 'pending'}" aria-labelledby="stf-h">
+    <div class="stf-wrap">
+      ${stfHeadlineHtml('Pertanyaan\nUmum')}
+      <div class="stf-ticker" data-paused="${STF.tickerPaused ? 'true' : 'false'}">
+        <div class="stf-ticker-mask">
+          <div class="stf-ticker-track">
+            ${[0, 1].map(() => `<div class="stf-ticker-run">${[...FAQ_TICKER, ...FAQ_TICKER].map(t => `<span>${esc(t)}</span>`).join('')}</div>`).join('')}
+          </div>
+        </div>
+        <button type="button" class="stf-ticker-toggle" data-stf="ticker">${STF.tickerPaused ? '▶' : '❚❚'}</button>
+      </div>
+      <div class="stf-meta">
+        <p class="stf-intro">Info cepat seputar stok ready vs pre-order, ongkir, kode kupon, konfirmasi pembayaran invoice, dan pesanan Funstuff.</p>
+        <div class="stf-search">
+          <label for="stf-q">Cari jawaban</label>
+          <div class="stf-field">
+            <input id="stf-q" type="search" autocomplete="off" value="${esc(STF.query)}" placeholder="Coba &ldquo;kupon&rdquo; atau &ldquo;ongkir&rdquo;" />
+            ${STF.query ? '<button type="button" class="stf-clear" data-stf="clear-q">Hapus</button>' : ''}
+          </div>
+          <div id="stf-count" class="stf-count"></div>
+        </div>
+      </div>
+      <ul class="stf-chips">
+        <li><button type="button" class="stf-chip" data-stf="cat" data-cat="" aria-pressed="${STF.category === null}">Semua <small id="stf-cnt-all">${FAQ_ITEMS.length}</small></button></li>
+        ${FAQ_CATEGORIES.map(c => `<li><button type="button" class="stf-chip" data-stf="cat" data-cat="${esc(c)}" aria-pressed="${STF.category === c}">${esc(c)} <small data-stf-cnt="${esc(c)}">0</small></button></li>`).join('')}
+      </ul>
+      <div id="stf-body"></div>
+      <div class="stf-contact">
+        <p>Masih ada yang bikin bingung?</p>
+        <a class="stf-cta" href="${WA_URL}" target="_blank" rel="noopener">Chat CS WhatsApp →</a>
+      </div>
+    </div>
+  </section>`;
+}
+
+function drawSlitTypeFaqList() {
+  const body = $('#stf-body');
+  if (!body) return;
+  const counts = {}; let allMatch = 0;
+  FAQ_ITEMS.forEach(it => {
+    if (stfMatches(it.question + ' ' + it.answer, STF.query)) {
+      allMatch++; if (it.category) counts[it.category] = (counts[it.category] || 0) + 1;
+    }
+  });
+  const cntAll = $('#stf-cnt-all'); if (cntAll) cntAll.textContent = String(allMatch);
+  document.querySelectorAll('[data-stf-cnt]').forEach(el => { el.textContent = String(counts[el.dataset.stfCnt] || 0); });
+  document.querySelectorAll('.stf-chip').forEach(btn => btn.setAttribute('aria-pressed', String((btn.dataset.cat || null) === STF.category)));
+
+  const visible = FAQ_ITEMS.filter(it => (!STF.category || it.category === STF.category) && stfMatches(it.question + ' ' + it.answer, STF.query));
+  const countEl = $('#stf-count');
+  if (countEl) countEl.textContent = (STF.query.trim() || STF.category !== null) ? `${visible.length} dari ${FAQ_ITEMS.length} pertanyaan` : '';
+
+  if (!visible.length) {
+    body.innerHTML = `<div class="stf-empty"><p>Belum ada jawaban untuk &ldquo;${esc(STF.query.trim() || STF.category)}&rdquo;.</p><button type="button" class="stf-copy stf-reset" data-stf="reset">Tampilkan semua pertanyaan</button></div>`;
+    return;
+  }
+
+  body.innerHTML = `<ul class="stf-list">${visible.map((it, idx) => {
+    const isOpen = STF.openIds.has(it.id);
+    const state = isOpen ? 'open' : STF.closingIds.has(it.id) ? 'closing' : 'closed';
+    const rowHtml = inv => `<span class="stf-row${inv ? ' stf-row--inv' : ''}" ${inv ? 'aria-hidden="true"' : ''}><span>${stfHighlight(it.question, STF.query)}</span><svg class="stf-plus" viewBox="0 0 32 32" fill="none"><path d="M16 1v30M1 16h30" stroke="currentColor" stroke-width="2"/></svg></span>`;
+    return `<li class="stf-item" data-state="${state}"><span class="stf-fill"></span><h3 class="stf-h"><button type="button" class="stf-btn" data-stf="toggle" data-id="${esc(it.id)}" data-pos="${idx}" aria-expanded="${isOpen}">${rowHtml(false)}${rowHtml(true)}</button></h3><div class="stf-panel"><div class="stf-panel-in"><div class="stf-answer"><p>${stfHighlight(it.answer, STF.query)}</p><div class="stf-tools">${it.category ? `<span class="stf-tag">${esc(it.category)}</span>` : ''}</div></div></div></div></li>`;
+  }).join('')}</ul>`;
+}
+
+function initSlitTypeFaq() {
+  const root = $('#stf');
+  if (!root) return;
+  drawSlitTypeFaqList();
+  if (STF.io) { STF.io.disconnect(); STF.io = null; }
+  if (!STF.introDone && 'IntersectionObserver' in window) {
+    STF.io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { STF.introDone = true; requestAnimationFrame(() => root.setAttribute('data-intro', 'done')); STF.io.disconnect(); }
+    }, { threshold: 0.12 });
+    STF.io.observe(root);
+  } else { STF.introDone = true; root.setAttribute('data-intro', 'done'); }
+}
+
+function teardownSlitTypeFaq() { if (STF.io) { STF.io.disconnect(); STF.io = null; } }
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-stf]');
+  if (!t) return;
+  const act = t.dataset.stf;
+  if (act === 'toggle') {
+    const id = t.dataset.id;
+    if (STF.openIds.has(id)) {
+      STF.openIds.delete(id); STF.closingIds.add(id);
+      clearTimeout(STF.closeTimers[id]);
+      STF.closeTimers[id] = setTimeout(() => { STF.closingIds.delete(id); drawSlitTypeFaqList(); }, 300);
+    } else {
+      STF.openIds.clear(); STF.openIds.add(id); STF.closingIds.delete(id); clearTimeout(STF.closeTimers[id]);
+    }
+    drawSlitTypeFaqList();
+  } else if (act === 'cat') {
+    const c = t.dataset.cat || null;
+    STF.category = STF.category === c ? null : c;
+    drawSlitTypeFaqList();
+  } else if (act === 'clear-q' || act === 'reset') {
+    STF.query = ''; if (act === 'reset') STF.category = null;
+    const inp = $('#stf-q'); if (inp) inp.value = '';
+    drawSlitTypeFaqList();
+  } else if (act === 'ticker') {
+    STF.tickerPaused = !STF.tickerPaused;
+    const tk = $('.stf-ticker'); if (tk) tk.setAttribute('data-paused', STF.tickerPaused ? 'true' : 'false');
+    t.textContent = STF.tickerPaused ? '▶' : '❚❚';
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'stf-q') { STF.query = e.target.value; drawSlitTypeFaqList(); }
+  if (e.target.id === 'search-input') { searchQuery = e.target.value; drawCatalogGrid(); }
+});
+
+function renderShowcase() {
+  return `<section id="sc-wrap" class="sc-wrap mt-16"><div id="sc-stage" class="sc-stage"><p class="sc-kicker">Koleksi Pilihan</p><div class="sc-track">${SHOWCASE.map((p, i) => `<figure class="sc-card" data-i="${i}">${productMedia(p)}</figure>`).join('')}<span class="sc-slash"></span></div><div class="sc-meta"><span id="sc-num" class="sc-num">01</span><div><p id="sc-artist" class="sc-artist">${esc(SHOWCASE[0]?.artist || '')}</p><p id="sc-title" class="sc-title">${esc(SHOWCASE[0]?.name || '')}</p></div></div><div class="sc-progress"><span id="sc-bar"></span></div></div></section>`;
+}
+
+function renderHome() {
+  const marqueeText = '✨ GUNAKAN KODE KUPON COERFUN10 UNTUK DISKON 10% ATAU FUNSTUFF15K UNTUK POTONGAN RP15.000! ✨ &nbsp;•&nbsp; STOK SIAP KIRIM DARI INDONESIA &nbsp;•&nbsp; 100% IN-HOUSE IP FANMERCH &nbsp;•&nbsp; ';
+  return `
+  ${renderDoodleBanner()}
+  <div class="marquee -mx-4 md:mx-0 md:rounded-full bg-maroon text-white text-xs font-semibold tracking-wider py-2.5 mb-8">
+    <div class="marquee-track"><span class="px-4">${marqueeText}</span><span class="px-4">${marqueeText}</span></div>
+  </div>
+  <section id="hero-section" class="fade-in relative grid md:grid-cols-2 gap-8 items-center bg-white border border-maroon/10 rounded-[2rem] p-6 md:p-12 overflow-hidden select-none">
+    <div class="relative order-2 md:order-1">
+      <div id="hero-track">
+        ${HERO_SLIDES.map((s, i) => `<div class="hero-text ${i === heroIndex ? '' : 'hidden'}"><span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full bg-sand text-maroon uppercase tracking-widest">${s.tag}</span><h1 class="font-display text-5xl md:text-6xl font-black leading-[1.05] mt-5 text-maroon">${s.title}</h1><p class="text-base md:text-lg font-semibold text-ink mt-3">${s.sub}</p><p class="text-sm text-ink/60 mt-2">${s.detail}</p><div class="mt-8 flex flex-wrap gap-3"><a href="#/katalog" class="btn-primary px-7 py-3 rounded-full font-semibold text-sm">Belanja Sekarang</a><button data-action="detail" data-id="${s.pid}" class="btn-ghost px-6 py-3 rounded-full font-semibold text-sm">Lihat Detail</button></div></div>`).join('')}
+      </div>
+      <div class="mt-10 flex items-center gap-5">
+        <div class="flex items-center gap-2">${HERO_SLIDES.map((_, i) => `<button data-action="hero-go" data-index="${i}" class="hero-dot ${i === heroIndex ? 'active' : ''}"></button>`).join('')}</div>
+        <div class="flex items-center gap-2 ml-auto"><button data-action="hero-prev" class="lift w-9 h-9 rounded-full border border-maroon/20 text-maroon hover:bg-sand">‹</button><button data-action="hero-next" class="lift w-9 h-9 rounded-full border border-maroon/20 text-maroon hover:bg-sand">›</button></div>
+      </div>
+      <div class="mt-4 h-[3px] w-full bg-sand rounded-full overflow-hidden"><div id="hero-bar" class="hero-bar"></div></div>
+    </div>
+    <div class="relative order-1 md:order-2">
+      <div class="relative aspect-square max-w-sm mx-auto w-full">
+        ${HERO_SLIDES.map((s, i) => `<div class="hero-slide absolute inset-0 rounded-[1.75rem] ${mediaBg} overflow-hidden shadow-xl transition-all duration-500 ${i === heroIndex ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0'}">${productMedia(getProduct(s.pid))}</div>`).join('')}
+        <div class="hero-sticker absolute -bottom-4 -left-4 bg-maroon text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-lg z-20">Siap Kirim 🇮🇩</div>
+      </div>
+    </div>
+  </section>
+  <section class="reveal mt-14">
+    <div class="flex gap-6 md:gap-10 overflow-x-auto pb-2 md:flex-wrap md:justify-center md:overflow-visible">
+      ${ARTISTS.map(a => `<button data-action="artist" data-name="${a.name}" class="artist-circle shrink-0 flex flex-col items-center gap-2 text-[10px] font-bold text-maroon"><span class="circle w-14 h-14 md:w-18 md:h-18 rounded-full border border-maroon/30 bg-white flex items-center justify-center text-xs font-black text-maroon">${a.short}</span><span class="uppercase tracking-wide">${a.name}</span></button>`).join('')}
+    </div>
+  </section>
+  ${renderShowcase()}
+  <section class="reveal mt-20">
+    <div class="flex items-end justify-between border-b border-maroon/20 pb-3 mb-6">
+      <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon">Produk Terbaru</h2>
+      <a href="#/katalog" class="text-sm font-semibold text-brand hover:underline">Lihat semua →</a>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">${PRODUCTS.slice(0, 4).map(productCard).join('')}</div>
+  </section>
+  <section class="reveal mt-20">
+    <p class="text-center text-xs font-bold uppercase tracking-[0.3em] text-brand">Kenapa Kami</p>
+    <h2 class="font-display text-2xl md:text-3xl font-bold uppercase tracking-wider text-center text-maroon mt-2">Kenapa Funstuff?</h2>
+    <div class="grid md:grid-cols-3 gap-6 mt-10">
+      <div class="card lift p-7"><div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center text-2xl">🎨</div><h3 class="font-bold text-lg mt-5 text-maroon">100% In-House IP</h3><p class="text-sm text-ink/70 mt-2 leading-relaxed">Desain orisinal yang dikembangkan tim kami sendiri, bukan sekadar cetak ulang tanpa karakter.</p></div>
+      <div class="card lift p-7"><div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center text-2xl">✅</div><h3 class="font-bold text-lg mt-5 text-maroon">Kontrol Kualitas</h3><p class="text-sm text-ink/70 mt-2 leading-relaxed">Setiap produk dicek sebelum dikemas agar sampai ke tanganmu dalam kondisi terbaik.</p></div>
+      <div class="card lift p-7"><div class="w-12 h-12 rounded-2xl bg-sand flex items-center justify-center text-2xl">🔒</div><h3 class="font-bold text-lg mt-5 text-maroon">Webstore Aman</h3><p class="text-sm text-ink/70 mt-2 leading-relaxed">Data pribadi dan pembayaranmu diproses dengan sistem yang aman dan terenkripsi.</p></div>
+    </div>
+  </section>`;
+}
+
+function renderCatalog() {
+  return `<section class="fade-in"><h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon">Katalog</h1><p class="text-ink/60 mt-2 mb-6">Pilih merch favoritmu. Klik <span class="font-semibold">Detail</span> untuk melihat spesifikasi lengkap.</p><div class="card p-4"><input id="search-input" type="text" value="${esc(searchQuery)}" placeholder="Cari artis atau produk..." class="${inputCls}" /></div><div class="flex flex-wrap gap-2 mt-5"><button data-action="artist" data-name="ALL" class="chip rounded-full border border-maroon/20 px-4 py-1.5 text-xs font-semibold text-maroon bg-white">Semua</button>${ARTISTS.map(a => `<button data-action="artist" data-name="${a.name}" class="chip rounded-full border border-maroon/20 px-4 py-1.5 text-xs font-semibold text-maroon bg-white">${a.name}</button>`).join('')}</div><p id="catalog-count" class="text-xs text-ink/50 mt-5"></p><div id="catalog-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-4"></div></section>`;
+}
+
+function drawCatalogGrid() {
+  const grid = $('#catalog-grid'); if (!grid) return;
+  const q = searchQuery.trim().toLowerCase();
+  const list = PRODUCTS.filter(p => (artistFilter === 'ALL' || p.artist === artistFilter) && (!q || p.name.toLowerCase().includes(q) || p.artist.toLowerCase().includes(q)));
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.name === artistFilter));
+  const count = $('#catalog-count'); if (count) count.textContent = `Menampilkan ${list.length} produk`;
+  grid.innerHTML = list.length ? list.map(productCard).join('') : `<div class="col-span-full text-center py-16"><div class="text-6xl">🫥</div><p class="font-semibold mt-3">Produk belum tersedia</p></div>`;
+}
+
+function renderAbout() {
+  return `<section class="fade-in max-w-3xl mx-auto text-center"><div class="logo-frame h-28 w-72 mx-auto"><img src="assets/funstuff.png" alt="Funstuff Logo" class="logo-img" /></div><h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mt-6">Tentang Funstuff</h1><p class="mt-4 text-ink/80 leading-relaxed">Funstuff adalah toko merch dan album resmi untuk penggemar musik di Indonesia, dengan stok yang siap kirim dari Indonesia.</p><div class="grid sm:grid-cols-3 gap-4 mt-10"><div class="card lift p-6"><p class="font-display text-3xl font-black text-maroon">${PRODUCTS.length}+</p><p class="text-xs mt-1 font-semibold text-ink/70">Produk Unggulan</p></div><div class="card lift p-6"><p class="font-display text-3xl font-black text-maroon">100%</p><p class="text-xs mt-1 font-semibold text-ink/70">In-House IP</p></div><div class="card lift p-6"><p class="font-display text-3xl font-black text-maroon">Siap</p><p class="text-xs mt-1 font-semibold text-ink/70">Kirim ke seluruh ID</p></div></div></section>`;
+}
+
+function renderHelp() {
+  return `<section class="fade-in max-w-4xl mx-auto"><div class="bg-sand border border-maroon/10 rounded-2xl p-6 mb-8"><h2 class="font-display text-lg font-bold uppercase tracking-wider text-maroon text-center">Pembatalan Pesanan</h2><p class="mt-2 text-sm text-ink/80 text-center">Pesanan bisa dibatalkan sebelum nomor resi keluar. Hubungi CS WhatsApp dengan menyertakan nomor pesanan (contoh: FS-2026XXXX).</p></div>${renderSlitTypeFaq()}</section>`;
+}
+
+function renderCart() {
+  const { items, subtotal } = cartSummary();
+  if (!items.length) return emptyCartView();
+  const discount = calcDiscount(subtotal);
+  return `<section class="fade-in"><h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mb-8">Keranjang</h1><div class="grid lg:grid-cols-3 gap-8"><div class="lg:col-span-2 card overflow-hidden"><ul class="divide-y divide-maroon/10">${items.map(i => `<li class="flex items-center justify-between gap-4 px-6 py-5"><div class="flex items-center gap-4"><button data-action="remove" data-id="${i.id}" class="text-maroon/50 hover:text-brand">✕</button><div class="w-16 h-16 rounded-xl overflow-hidden ${mediaBg}">${productMedia(i.product)}</div><div><p class="text-[11px] font-bold text-brand uppercase">${i.product.artist}</p><p class="font-semibold text-sm text-maroon">${i.product.name}</p><p class="text-xs text-ink/60">${formatRp(i.product.price)}</p></div></div><div class="flex items-center gap-2"><button data-action="qty" data-id="${i.id}" data-delta="-1" class="w-8 h-8 rounded-full border">−</button><span class="w-8 text-center font-semibold">${i.qty}</span><button data-action="qty" data-id="${i.id}" data-delta="1" class="w-8 h-8 rounded-full border">+</button></div></li>`).join('')}</ul><div class="p-4 border-t border-maroon/10">${coupon ? `<div class="flex justify-between bg-emerald-50 rounded-xl px-4 py-3 text-sm"><span><strong>${esc(coupon.code)}</strong> · ${coupon.label}</span><button data-action="remove-coupon" class="text-brand text-xs font-semibold">Hapus</button></div>` : `<form id="coupon-form" class="flex gap-2"><input id="coupon-input" type="text" placeholder="Kode kupon (COERFUN10 / FUNSTUFF15K)" class="${inputCls} uppercase" /><button type="submit" class="btn-primary px-5 rounded-full text-sm font-semibold">Terapkan</button></form>`}</div></div><aside class="card h-fit p-6 space-y-4 text-sm"><div class="flex justify-between"><span>Subtotal</span><span>${formatRp(subtotal)}</span></div><div class="flex justify-between"><span>Diskon</span><span class="text-emerald-600">${discount ? '-' + formatRp(discount) : 'Rp0'}</span></div><div class="flex justify-between text-base font-extrabold pt-3 border-t"><span>Estimasi Total</span><span class="text-maroon">${formatRp(Math.max(0, subtotal - discount))}</span></div><a href="#/checkout" class="btn-primary block text-center w-full py-3 rounded-full font-semibold">Proses ke Checkout</a></aside></div></section>`;
+}
+
+function renderCheckout() {
+  const { items } = cartSummary();
+  if (!items.length) return emptyCartView();
+  const user = currentUser();
+  return `<section class="fade-in"><h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mb-6">Checkout</h1><form id="checkout-form" class="grid lg:grid-cols-3 gap-8" novalidate><div class="lg:col-span-2 space-y-6"><div class="card p-6 space-y-4"><h2 class="font-display text-lg font-bold text-maroon">1. Data Penerima</h2><div><label class="${labelCls}" for="ck-name">Nama Penerima</label><input id="ck-name" name="name" type="text" required value="${user ? esc(user.name) : ''}" class="${inputCls}" /></div><div class="grid sm:grid-cols-2 gap-4"><div><label class="${labelCls}" for="ck-phone">Nomor WhatsApp</label><input id="ck-phone" name="phone" type="tel" required placeholder="081234567890" class="${inputCls}" /></div><div><label class="${labelCls}" for="ck-province">Provinsi</label><select id="ck-province" name="province" class="${inputCls}">${PROVINCES.map(p => `<option ${p === 'DKI Jakarta' ? 'selected' : ''}>${p}</option>`).join('')}</select></div></div><div><label class="${labelCls}" for="ck-address">Alamat Lengkap</label><textarea id="ck-address" name="address" rows="3" required class="${inputCls}"></textarea></div></div><div class="card p-6"><h2 class="font-display text-lg font-bold text-maroon mb-4">2. Kurir</h2><div class="grid sm:grid-cols-3 gap-3">${Object.entries(COURIERS).map(([k, c], i) => `<label class="cursor-pointer"><input type="radio" name="courier" value="${esc(k)}" class="peer sr-only" ${i === 0 ? 'checked' : ''} /><div class="rounded-2xl border-2 border-maroon/10 p-4 peer-checked:border-maroon peer-checked:bg-sand"><p class="font-bold text-maroon">${esc(k)}</p><p class="text-xs text-ink/60">${c.eta}</p><p class="text-xs font-semibold mt-1">Luar DKI: ${formatRp(c.fee)}</p></div></label>`).join('')}</div></div><div class="card p-6"><h2 class="font-display text-lg font-bold text-maroon mb-4">3. Pembayaran</h2><div class="grid sm:grid-cols-3 gap-3">${Object.entries(PAYMENTS).map(([k, p], i) => `<label class="cursor-pointer"><input type="radio" name="payment" value="${k}" class="peer sr-only" ${i === 0 ? 'checked' : ''} /><div class="rounded-2xl border-2 border-maroon/10 p-4 peer-checked:border-maroon peer-checked:bg-sand"><p class="font-bold text-maroon">${p.label}</p></div></label>`).join('')}</div></div></div><aside class="card h-fit p-6 space-y-4 text-sm"><div id="checkout-totals" class="space-y-2"></div><button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold">Buat Pesanan</button></aside></form></section>`;
+}
+
+function drawCheckoutTotals() {
+  const form = $('#checkout-form'); const box = $('#checkout-totals');
+  if (!form || !box) return;
+  const fd = new FormData(form); const { subtotal } = cartSummary();
+  const discount = calcDiscount(subtotal); const courier = fd.get('courier') || 'JNE';
+  const shipping = calcShipping(fd.get('province'), courier);
+  const total = Math.max(0, subtotal - discount) + shipping;
+  box.innerHTML = `<div class="flex justify-between"><span>Subtotal</span><span>${formatRp(subtotal)}</span></div><div class="flex justify-between"><span>Diskon</span><span class="text-emerald-600">${discount ? '-' + formatRp(discount) : 'Rp0'}</span></div><div class="flex justify-between"><span>Ongkir (${esc(courier)})</span><span>${shipping === 0 ? 'Gratis' : formatRp(shipping)}</span></div><div class="flex justify-between text-base font-extrabold pt-2 border-t"><span>Total Tagihan</span><span class="text-maroon">${formatRp(total)}</span></div>`;
+}
+
+function handleCheckoutSubmit(form) {
+  const fd = new FormData(form);
+  const name = String(fd.get('name') || '').trim();
+  const phone = String(fd.get('phone') || '').replace(/[\s-]/g, '');
+  const address = String(fd.get('address') || '').trim();
+  const province = fd.get('province'); const courier = fd.get('courier'); const paymentKey = fd.get('payment');
+  if (!name) return showToast('Nama penerima wajib diisi');
+  if (!/^(\+?62|0)8\d{7,11}$/.test(phone)) return showToast('Nomor WhatsApp tidak valid');
+  if (address.length < 10) return showToast('Alamat lengkap minimal 10 karakter');
+  const { items, subtotal } = cartSummary(); if (!items.length) return showToast('Keranjang kosong');
+  const discount = calcDiscount(subtotal); const shipping = calcShipping(province, courier);
+  const total = Math.max(0, subtotal - discount) + shipping;
+  const orders = getOrders();
+  const id = 'FS-2026' + String(Math.floor(1000 + Math.random() * 9000));
+  const user = currentUser();
+  orders.unshift({
+    id, createdAt: new Date().toISOString(), paidAt: null, user: user ? user.username : null,
+    customer: { name, phone, address, province }, courier, paymentKey, payment: PAYMENTS[paymentKey].label,
+    items: items.map(i => ({ id: i.id, name: i.product.name, artist: i.product.artist, price: i.product.price, qty: i.qty })),
+    subtotal, discount, couponCode: coupon ? coupon.code : null, shipping, total, status: STATUS_UNPAID, purchaseTracked: false
+  });
+  setOrders(orders); cart = []; coupon = null; saveCart();
+  location.hash = '#/invoice/' + id;
+}
+
+function markPaid(id) {
+  const orders = getOrders(); const order = orders.find(o => o.id === id);
+  if (!order || order.status === STATUS_PAID) return;
+  order.status = STATUS_PAID; order.paidAt = new Date().toISOString();
+  setOrders(orders); render(); showToast('Pembayaran terkonfirmasi! Invoice lunas');
+}
+
+function renderInvoice(id) {
+  const order = getOrders().find(o => o.id === id);
+  if (!order) return renderNotFound();
+  const paid = order.status === STATUS_PAID; const pay = PAYMENTS[order.paymentKey] || {};
+  return `<section class="fade-in max-w-3xl mx-auto"><div id="print-area" class="relative card overflow-hidden"><div class="${paid ? 'bg-emerald-700' : 'bg-maroon'} text-white px-6 py-8 flex justify-between items-center"><div><p class="text-xs uppercase opacity-80">Invoice - Funstuff</p><h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1></div><span class="text-xs font-bold px-3 py-1.5 rounded-full bg-white ${paid ? 'text-emerald-700' : 'text-maroon'}">${esc(order.status)}</span></div><div class="p-6 space-y-6 text-sm"><p>Penerima: <strong>${esc(order.customer.name)}</strong> · ${esc(order.customer.phone)} · ${esc(order.customer.address)}, ${esc(order.customer.province)}</p><p>Total: <strong class="text-maroon text-lg">${formatRp(order.total)}</strong> (${esc(order.payment)})</p>${!paid ? `<div class="bg-sand p-4 rounded-xl">${pay.type === 'qris' ? `<img src="assets/qris bayar" alt="QRIS" class="w-48 mx-auto" />` : `<p>Transfer ke <strong>${esc(pay.number)}</strong> a.n. ${esc(pay.holder)} <button data-action="copy" data-value="${esc(pay.number)}" class="underline ml-2">Salin</button></p>`}</div><button data-action="confirm-payment" data-id="${esc(order.id)}" class="btn-primary w-full py-3 rounded-full font-semibold">Konfirmasi Pembayaran</button>` : `<button data-action="print" class="btn-success w-full py-3 rounded-full font-semibold">Cetak / Simpan Invoice</button>`}</div></div></section>`;
+}
+
+function copyText(text) {
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast('Tersalin ke clipboard')).catch(() => showToast('Salin manual'));
+}
+
+function renderAccount() {
+  const user = currentUser();
+  if (user) {
+    const orders = getOrders().filter(o => o.user === user.username);
+    return `<section class="fade-in space-y-6"><div class="card p-6 flex justify-between items-center"><div><h1 class="font-display text-2xl font-bold text-maroon">${esc(user.name)}</h1><p class="text-sm text-ink/60">@${esc(user.username)}</p></div><button data-action="logout" class="btn-ghost px-5 py-2 rounded-full text-xs font-semibold">Logout</button></div><div class="space-y-3">${orders.map(o => `<div class="card p-4 flex justify-between items-center"><div><p class="font-bold text-maroon">#${esc(o.id)}</p><p class="text-xs text-ink/60">${formatDate(o.createdAt)}</p></div><div class="flex items-center gap-3"><span class="text-xs font-bold px-3 py-1 rounded-full ${orderStatusBadge(o.status)}">${esc(o.status)}</span><a href="#/invoice/${esc(o.id)}" class="btn-ghost px-3 py-1.5 rounded-full text-xs font-semibold">Invoice</a></div></div>`).join('')}</div></section>`;
+  }
+  const isLogin = authMode === 'login';
+  return `<section class="fade-in max-w-md mx-auto card p-8"><div class="flex bg-sand rounded-full p-1 mb-6"><button data-action="auth-mode" data-mode="login" class="flex-1 py-2 rounded-full text-sm font-semibold ${isLogin ? 'bg-white text-maroon shadow' : ''}">Masuk</button><button data-action="auth-mode" data-mode="register" class="flex-1 py-2 rounded-full text-sm font-semibold ${!isLogin ? 'bg-white text-maroon shadow' : ''}">Daftar</button></div><form id="auth-form" class="space-y-4" novalidate>${isLogin ? `<div><label class="${labelCls}" for="l-identity">Username atau E-mail</label><input id="l-identity" name="identity" type="text" required class="${inputCls}" /></div><div><label class="${labelCls}" for="l-password">Kata sandi</label><input id="l-password" name="password" type="password" required class="${inputCls}" /></div><label class="flex items-center gap-2 text-xs"><input type="checkbox" name="remember" checked /> Keep me signed in</label>` : `<div><label class="${labelCls}" for="r-name">Nama Lengkap</label><input id="r-name" name="name" type="text" required class="${inputCls}" /></div><div><label class="${labelCls}" for="r-username">Username</label><input id="r-username" name="username" type="text" required class="${inputCls}" /></div><div><label class="${labelCls}" for="r-email">E-mail</label><input id="r-email" name="email" type="email" required class="${inputCls}" /></div><div><label class="${labelCls}" for="r-password">Kata sandi</label><input id="r-password" name="password" type="password" required class="${inputCls}" /></div><div><label class="${labelCls}" for="r-confirm">Konfirmasi kata sandi</label><input id="r-confirm" name="confirm" type="password" required class="${inputCls}" /></div>`}<button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold text-sm">${isLogin ? 'Masuk' : 'Daftar Sekarang'}</button></form></section>`;
+}
+
+function handleLogin(fd) {
+  const id = String(fd.get('identity') || '').trim().toLowerCase(); const pw = String(fd.get('password') || '');
+  const u = getUsers().find(x => (x.username.toLowerCase() === id || x.email.toLowerCase() === id) && x.password === pw);
+  if (!u) return showToast('Akun atau kata sandi salah');
+  setSession(u.username, fd.get('remember') === 'on'); updateAccountLink(); render(); showToast(`Halo, ${u.name}!`);
+}
+
+function handleRegister(fd) {
+  const name = String(fd.get('name') || '').trim(); const username = String(fd.get('username') || '').trim();
+  const email = String(fd.get('email') || '').trim().toLowerCase(); const pw = String(fd.get('password') || ''); const cf = String(fd.get('confirm') || '');
+  if (!name || username.length < 3 || !/^\S+@\S+\.\S+$/.test(email) || pw.length < 6 || pw !== cf) return showToast('Cek kembali data registrasi');
+  const users = getUsers();
+  if (users.some(x => x.username.toLowerCase() === username.toLowerCase() || x.email.toLowerCase() === email)) return showToast('Username/e-mail sudah dipakai');
+  users.push({ name, username, email, password: pw }); setUsers(users); setSession(username, true); updateAccountLink(); render(); showToast('Akun berhasil dibuat!');
+}
+
+function renderNotFound() {
+  return `<section class="text-center py-20"><h1 class="font-display text-3xl font-bold text-maroon">Halaman tidak ditemukan</h1><a href="#/beranda" class="btn-primary inline-block mt-6 px-6 py-2.5 rounded-full text-sm font-semibold">Beranda</a></section>`;
+}
+
+function heroGo(i) {
+  const n = HERO_SLIDES.length; heroIndex = (i + n) % n;
+  document.querySelectorAll('.hero-text').forEach((el, k) => el.classList.toggle('hidden', k !== heroIndex));
+  document.querySelectorAll('.hero-slide').forEach((el, k) => {
+    el.classList.toggle('opacity-100', k === heroIndex); el.classList.toggle('scale-100', k === heroIndex); el.classList.toggle('z-10', k === heroIndex);
+    el.classList.toggle('opacity-0', k !== heroIndex); el.classList.toggle('scale-95', k !== heroIndex); el.classList.toggle('z-0', k !== heroIndex);
+  });
+  document.querySelectorAll('.hero-dot').forEach((d, k) => d.classList.toggle('active', k === heroIndex));
+  const bar = $('#hero-bar'); if (bar) { bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; }
+}
+
+function attachHeroSwipe() {
+  const sec = $('#hero-section'); if (!sec) return;
+  let sx = null;
+  sec.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  sec.addEventListener('touchend', e => { if (sx !== null && Math.abs(e.changedTouches[0].clientX - sx) > 40) heroGo(heroIndex + (e.changedTouches[0].clientX - sx < 0 ? 1 : -1)); sx = null; });
+}
+
+setInterval(() => { if ($('#hero-section') && !heroPaused) heroGo(heroIndex + 1); }, 5000);
+
+function setupShowcase() {
+  const wrap = $('#sc-wrap'); const stage = $('#sc-stage'); if (!wrap || !stage) return;
+  const cards = [...stage.querySelectorAll('.sc-card')]; const slash = stage.querySelector('.sc-slash');
+  const numEl = $('#sc-num'); const titleEl = $('#sc-title'); const artistEl = $('#sc-artist'); const barEl = $('#sc-bar');
+  const N = cards.length; let W = 0, lastIdx = -1, ticking = false;
+  const measure = () => { W = (cards[0]?.offsetWidth || 240) * 0.8; };
+  const update = () => {
+    ticking = false;
+    const rect = wrap.getBoundingClientRect();
+    const total = Math.max(1, wrap.offsetHeight - stage.offsetHeight);
+    const prog = Math.min(1, Math.max(0, -rect.top / total));
+    const p = prog * (N - 1);
+    cards.forEach((el, i) => {
+      const d = i - p, ad = Math.abs(d);
+      el.style.transform = `translate3d(calc(-50% + ${(d * W).toFixed(1)}px), -50%, 0) rotate(${(Math.max(-1, Math.min(1, d)) * 9).toFixed(2)}deg) scale(${(1 - Math.min(ad, 1) * 0.14).toFixed(3)})`;
+      el.style.opacity = (ad > 1.6 ? 0 : Math.max(0, 1 - ad * 0.65)).toFixed(3);
+      el.style.zIndex = String(10 - Math.round(Math.min(ad, 1) * 5));
+    });
+    const accent = Math.sin(Math.PI * (p - Math.floor(p)));
+    slash.style.opacity = accent.toFixed(3);
+    slash.style.transform = `translate3d(-50%, -50%, 0) rotate(-16deg) scaleX(${(0.35 + accent * 0.65).toFixed(3)})`;
+    const idx = Math.min(N - 1, Math.max(0, Math.round(p)));
+    if (idx !== lastIdx) { lastIdx = idx; numEl.textContent = String(idx + 1).padStart(2, '0'); titleEl.textContent = SHOWCASE[idx].name; artistEl.textContent = SHOWCASE[idx].artist; }
+    barEl.style.transform = `scaleX(${prog.toFixed(4)})`;
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  measure(); update();
+  window.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('resize', measure);
+  showcaseCleanup = () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', measure); };
+}
+
+function teardownShowcase() { if (showcaseCleanup) { showcaseCleanup(); showcaseCleanup = null; } }
+
+function setupReveal() {
+  if (revealIO) { revealIO.disconnect(); revealIO = null; }
+  const items = document.querySelectorAll('.reveal'); if (!items.length) return;
+  revealIO = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); revealIO.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  items.forEach(el => revealIO.observe(el));
+}
+
+function initSmoothScroll() {
+  if (!window.Lenis || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  lenis = new Lenis({ duration: 1.0, smoothWheel: true });
+  const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
+  requestAnimationFrame(raf);
+}
+
+const DCB_FONT_SIZE = 200;
+const DCB_CREW = [
+  { kind: 'yeti', letter: 0, seat: 'front', offset: -0.32, name: 'Bruno', says: 'Laper? Cari shaker dulu, yuk!' },
+  { kind: 'bird', letter: 1, seat: 'top', offset: 0.02, name: 'Pip', says: 'Cek katalognya, jangan cuma liatin doang!' },
+  { kind: 'mushroom', letter: 2, seat: 'front', offset: 0.12, scale: 0.95, name: 'Morel', says: 'Gue si jamur, demen yang imut-imut!' },
+  { kind: 'kid', letter: 4, seat: 'top', offset: -0.05, name: 'Juno', says: 'Naik sini, pemandangannya bagus!' },
+  { kind: 'ghost', letter: 6, seat: 'behind', offset: 0, name: 'Boo', says: 'Boo! Kaget ya? Pakai COERFUN10 aja.' },
+  { kind: 'cat', letter: 7, seat: 'front', offset: 0.42, flip: true, name: 'Patch', says: 'Pakai FUNSTUFF15K, hemat Rp15.000!' }
+];
+const DCB_DOODLES = ['flame', 'star', 'heart', 'bolt', 'sparkle', 'plane'];
+const DCB_COLORS = { flame: '#b5121b', flameCore: '#f2b96b', star: '#d9a441', heart: '#e0607e', bolt: '#c98a1b', sparkle: '#e9a0ab', plane: '#7a1014', cream: '#fbf6f1' };
+
+const DCB_ART = {
+  yeti: { k: 1, seat: 'front', box: { l: -72, r: 60, t: -140, b: 6 }, eyes: [{ x: -15, y: -86, r: 8, pupil: 3.6, max: 3.6 }, { x: 13, y: -88, r: 8, pupil: 3.6, max: 3.6 }], body: h => `<ellipse class="sh" cx="0" cy="2" rx="54" ry="5"/><path d="M-40 -92 C-62 -92 -70 -76 -68 -56 L-66 -30 C-64 -18 -54 -16 -44 -20 Z"/><path d="M-40 -92 C-62 -92 -70 -76 -68 -56 L-66 -30 C-64 -18 -54 -16 -44 -20 Z" fill="${h}" stroke="none"/><path d="M-44 -2 C-54 -28 -54 -66 -42 -90 C-32 -110 -14 -118 2 -118 C22 -118 40 -108 48 -88 C58 -64 58 -28 48 -2 Z"/><path class="n" d="M-12 -70 C-6 -64 6 -64 12 -71"/>` },
+  kid: { k: 1.28, seat: 'top', box: { l: -30, r: 30, t: -88, b: 42 }, eyes: [{ x: -6, y: -58, r: 0, pupil: 2.5, max: 1.8 }, { x: 6.5, y: -58, r: 0, pupil: 2.5, max: 1.8 }], body: () => `<circle cx="0" cy="-60" r="17"/><path d="M-15 -70 C-14 -87 14 -87 15 -70 Z"/><path d="M-20 -4 C-22 -20 -18 -38 -10 -44 L10 -44 C18 -38 22 -20 20 -4 Z"/>` },
+  bird: { k: 1.22, seat: 'top', box: { l: -34, r: 30, t: -62, b: 2 }, eyes: [{ x: 3, y: -30, r: 4.6, pupil: 2.3, max: 2 }, { x: 12, y: -31, r: 4.6, pupil: 2.3, max: 2 }], body: h => `<path d="M-18 -14 C-20 -30 -10 -40 2 -40 C16 -40 22 -28 20 -16 C18 -6 8 -4 0 -4 Z"/><path class="o" d="M19 -30 L29 -27 L19 -23 Z"/><path class="a" d="M-3 -38 L4 -59 L12 -37 Z"/>` },
+  cat: { k: 1.06, seat: 'front', box: { l: -30, r: 52, t: -110, b: 4 }, eyes: [{ x: 10, y: -76, r: 6, pupil: 2.8, max: 2.6 }], body: () => `<path d="M-26 -70 C-28 -88 -16 -98 0 -98 C16 -98 28 -88 26 -70 C24 -56 12 -50 0 -50 Z"/><path d="M-22 -86 L-25 -107 L-7 -96 Z"/><path d="M8 -96 L23 -108 L22 -86 Z"/><ellipse class="k" cx="-10" cy="-76" rx="7.5" ry="6.5"/>` },
+  ghost: { k: 1.3, seat: 'behind', box: { l: -26, r: 26, t: -70, b: 0 }, eyes: [{ x: -8, y: -44, r: 6.5, pupil: 3.2, max: 3 }, { x: 9, y: -44, r: 6.5, pupil: 3.2, max: 3 }], body: () => `<path d="M-23 -14 L-23 -40 C-23 -59 -12 -67 0 -67 C12 -67 23 -59 23 -40 L23 -14 Z"/>` },
+  mushroom: { k: 1.12, seat: 'front', box: { l: -27, r: 27, t: -56, b: 4 }, eyes: [{ x: -4.5, y: -16, r: 0, pupil: 1.9, max: 1.3 }, { x: 4.5, y: -16, r: 0, pupil: 1.9, max: 1.3 }], body: () => `<path d="M-10 0 L-8 -28 L8 -28 L10 0 Z"/><path class="r" d="M-25 -28 C-27 -45 -12 -55 0 -55 C12 -55 27 -45 25 -28 Z"/>` }
+};
+
+function dcbDoodleSvg(kind) {
+  const c = DCB_COLORS;
+  if (kind === 'flame') return `<path fill="${c.flame}" d="M0 14 C-9 14 -12 6 -10 0 C-8 -5 -4 -6 -4 -12 C1 -9 3 -5 2 -1 C4 -3 5 -6 5 -8 C10 -3 11 4 8 9 Z"/>`;
+  if (kind === 'star') return `<path fill="${c.star}" d="M0 -13 L3.6 -4.4 L13 -4 L5.8 2.2 L8.2 12 L0 6.6 L-8.2 12 L-5.8 2.2 L-13 -4 L-3.6 -4.4 Z"/>`;
+  if (kind === 'heart') return `<path fill="${c.heart}" d="M0 11 C-6 6 -13 1 -13 -5 C-13 -10 -8 -13 -4 -11 L0 -6 L4 -11 C8 -13 13 -10 13 -5 C13 1 6 6 0 11 Z"/>`;
+  if (kind === 'bolt') return `<path fill="${c.bolt}" d="M3 -14 L-8 2 L-1 2 L-4 14 L8 -3 L1 -3 Z"/>`;
+  if (kind === 'sparkle') return `<path fill="${c.sparkle}" d="M0 -13 C1 -4 4 -1 13 0 C4 1 1 4 0 13 C-1 4 -4 1 -13 0 C-4 -1 -1 -4 0 -13 Z"/>`;
+  return `<path fill="${c.plane}" d="M-13 -1 L13 -10 L4 12 L0 3 Z"/>`;
+}
+
+const DCB = { alive: false, root: null, world: null, svgEl: null, placed: null, vb: null, metrics: null, eyeEls: [], gaze: [], floaters: [], W: 0, H: 0, px: 0, py: 0, inside: false, visible: false, raf: 0, last: 0, io: null, ro: null, talk: -1, talkTimer: 0 };
+
+function dcbMeasure() {
+  const word = [...'FUNSTUFF'];
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (!ctx) return { adv: word.map(() => 150), cap: 146 };
+  ctx.font = `900 ${DCB_FONT_SIZE}px 'Playfair Display', Georgia, serif`;
+  const adv = []; let prev = 0;
+  word.forEach((_, i) => { const w = ctx.measureText(word.slice(0, i + 1).join('')).width; adv.push(w - prev); prev = w; });
+  return { adv, cap: ctx.measureText('H').actualBoundingBoxAscent || 146 };
+}
+
+function dcbBuild() {
+  const svg = DCB.svgEl; if (!svg || !DCB.metrics) return;
+  const { adv, cap } = DCB.metrics; const FS = DCB_FONT_SIZE; const gap = -0.02 * FS; const word = [...'FUNSTUFF'];
+  const x = []; let at = 0;
+  adv.forEach((a, i) => { x.push(at); at += a + (i < adv.length - 1 ? gap : 0); });
+  const placed = DCB_CREW.map((m, i) => {
+    const art = DCB_ART[m.kind]; const li = Math.min(word.length - 1, m.letter);
+    const scale = (cap / 144) * art.k * (m.scale ?? 1); const seat = m.seat || art.seat;
+    return { i, m, art, seat, scale, x: x[li] + adv[li] * (0.5 + (m.offset ?? 0)), y: seat === 'top' ? -cap : seat === 'behind' ? -cap + 30 * scale : 0, flip: m.flip ? -1 : 1 };
+  });
+  const vb = { x: -80, y: -230, w: at + 160, h: 270 };
+  const eyesHtml = art => art.eyes.map(eye => `<g class="bl">${eye.r > 0 ? `<circle cx="${eye.x}" cy="${eye.y}" r="${eye.r}"/>` : ''}<g class="pu"><circle class="k" cx="${eye.x}" cy="${eye.y}" r="${eye.pupil}"/><circle class="gl" cx="${eye.x + 1}" cy="${eye.y - 1}" r="1"/></g></g>`).join('');
+  const crewG = (p, inner) => `<g class="dcb-crew" data-c="${p.i}" transform="translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) scale(${(p.scale * p.flip).toFixed(4)} ${p.scale.toFixed(4)})"><g class="dcb-arrive" style="--d:${900 + p.i * 130}ms"><g class="dcb-hop">${inner}</g></g></g>`;
+  const behind = placed.filter(p => p.seat === 'behind'); const others = placed.filter(p => p.seat !== 'behind');
+  const letters = word.map((c, i) => `<g class="dcb-letter" style="--d:${160 + i * 80}ms"><text class="dcb-ink" x="${x[i].toFixed(1)}" y="0" font-size="${FS}">${c}</text></g>`).join('');
+  const hits = placed.map(p => `<rect class="dcb-hit" data-c="${p.i}" x="${(p.x - 36).toFixed(1)}" y="${(p.y - 75).toFixed(1)}" width="72" height="75" rx="12" tabindex="0"/>`).join('');
+  svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  svg.innerHTML = `<defs><pattern id="dcb-hatch" width="4.6" height="4.6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><line x1="0" y1="0" x2="0" y2="4.6" stroke="#7a1014" stroke-width="1.25"/></pattern></defs><g>${behind.map(p => crewG(p, `<g class="dcb-art">${p.art.body('url(#dcb-hatch)')}${eyesHtml(p.art)}</g>`)).join('')}</g>${letters}<g>${others.map(p => crewG(p, `<g class="dcb-art">${p.art.body('url(#dcb-hatch)')}${eyesHtml(p.art)}</g>`)).join('')}</g>${hits}`;
+  DCB.placed = placed; DCB.vb = vb;
+  DCB.eyeEls = placed.map(p => ({ pu: [...svg.querySelectorAll(`.dcb-crew[data-c="${p.i}"] .pu`)], bl: [...svg.querySelectorAll(`.dcb-crew[data-c="${p.i}"] .bl`)] }));
+}
+
+function dcbMakeDoodles() {
+  const box = $('#dcb-doodles'); if (!box) return; box.innerHTML = '';
+  DCB.floaters = DCB_DOODLES.map(kind => {
+    const size = 28 + Math.random() * 12; const el = document.createElement('div');
+    el.className = 'dcb-doodle'; el.style.width = size + 'px'; el.style.height = size + 'px';
+    el.innerHTML = `<svg viewBox="-16 -16 32 32" width="${size.toFixed(0)}" height="${size.toFixed(0)}">${dcbDoodleSvg(kind)}</svg>`;
+    box.appendChild(el);
+    return { el, size, x: 0, y: 0, vx: 0, vy: 0, rot: (Math.random() - 0.5) * 40, vr: (Math.random() - 0.5) * 24, fall: 10 + Math.random() * 12, phase: Math.random() * Math.PI * 2 };
+  });
+}
+
+function dcbPaintDoodles() {
+  const k = Math.min(1, Math.max(0.6, (DCB.W || 1100) / 1100));
+  for (const f of DCB.floaters) f.el.style.transform = `translate3d(${(f.x - f.size / 2).toFixed(1)}px, ${(f.y - f.size / 2).toFixed(1)}px, 0) rotate(${f.rot.toFixed(1)}deg) scale(${k.toFixed(3)})`;
+}
+
+function dcbDoodles(dt, t) {
+  if (!DCB.floaters.length || !DCB.W) return;
+  for (const f of DCB.floaters) {
+    f.x += (Math.sin(t * 0.7 + f.phase) * 14) * dt;
+    f.y += f.fall * dt;
+    f.rot = (f.rot + f.vr * dt) % 360;
+    if (f.y > DCB.H + 30) { f.y = -30; f.x = Math.random() * DCB.W; }
+  }
+  dcbPaintDoodles();
+}
+
+function dcbLook(dt, t) {
+  const svg = DCB.svgEl; if (!svg || !DCB.placed) return;
+  DCB.placed.forEach((p, c) => {
+    const g = (DCB.gaze[c] ||= { tx: p.x, ty: p.y - 60, next: 0, eyes: [] });
+    if (t > g.next) { g.tx = p.x + (Math.random() - 0.5) * 500; g.ty = p.y - 70 + (Math.random() - 0.5) * 240; g.next = t + 1.5 + Math.random() * 2; }
+    const els = DCB.eyeEls[c]; if (!els) return;
+    p.art.eyes.forEach((eye, e) => {
+      const dx = (g.tx - p.x) / p.scale - eye.x, dy = (g.ty - p.y) / p.scale - eye.y, d = Math.hypot(dx, dy) || 1;
+      const prev = g.eyes[e] || { x: 0, y: 0 };
+      const nx = prev.x + (((dx / d) * eye.max) - prev.x) * Math.min(1, dt * 6);
+      const ny = prev.y + (((dy / d) * eye.max) - prev.y) * Math.min(1, dt * 6);
+      g.eyes[e] = { x: nx, y: ny };
+      if (els.pu[e]) els.pu[e].setAttribute('transform', `translate(${nx.toFixed(2)} ${ny.toFixed(2)})`);
+    });
+  });
+}
+
+function dcbPoke(i) {
+  const bub = $('#dcb-bubble'); const p = DCB.placed && DCB.placed[i]; if (!bub || !p) return;
+  bub.textContent = p.m.says;
+  bub.style.left = (DCB.W * ((i + 1) / (DCB.placed.length + 1))) + 'px';
+  bub.style.top = '48px';
+  bub.classList.add('on');
+  clearTimeout(DCB.talkTimer); DCB.talkTimer = setTimeout(() => bub.classList.remove('on'), 2500);
+}
+
+function dcbResize() {
+  const w = DCB.world; if (!w || !w.clientWidth || !w.clientHeight) return;
+  if (!DCB.W) DCB.floaters.forEach((f, k) => { f.x = ((k + 0.5) / DCB.floaters.length) * w.clientWidth; f.y = Math.random() * w.clientHeight * 0.6; });
+  DCB.W = w.clientWidth; DCB.H = w.clientHeight; dcbPaintDoodles();
+}
+
+function dcbFrame(now) {
+  DCB.raf = 0; if (!DCB.alive || !DCB.visible || document.hidden) return;
+  const dt = Math.min(0.05, (now - DCB.last) / 1000); DCB.last = now;
+  dcbLook(dt, now / 1000); dcbDoodles(dt, now / 1000);
+  DCB.raf = requestAnimationFrame(dcbFrame);
+}
+
+function initDoodleBanner() {
+  const root = $('#dcb'); if (!root) return;
+  DCB.alive = true; DCB.root = root; DCB.world = $('#dcb-world'); DCB.svgEl = $('#dcb-svg'); DCB.metrics = dcbMeasure();
+  dcbBuild(); dcbMakeDoodles(); dcbResize();
+  root.addEventListener('click', e => { const h = e.target.closest('.dcb-hit'); if (h) dcbPoke(+h.dataset.c); });
+  DCB.ro = new ResizeObserver(dcbResize); DCB.ro.observe(DCB.world);
+  DCB.io = new IntersectionObserver(entries => {
+    DCB.visible = entries.some(en => en.isIntersecting);
+    if (DCB.visible && !DCB.raf) { DCB.last = performance.now(); DCB.raf = requestAnimationFrame(dcbFrame); }
+  }, { threshold: 0 });
+  DCB.io.observe(root);
+}
+
+function destroyDoodleBanner() {
+  DCB.alive = false; cancelAnimationFrame(DCB.raf); DCB.raf = 0;
+  if (DCB.io) DCB.io.disconnect(); if (DCB.ro) DCB.ro.disconnect();
+}
+
+const routes = {
+  beranda: renderHome, tentang: renderAbout, bantuan: renderHelp, katalog: renderCatalog,
+  keranjang: renderCart, checkout: renderCheckout, invoice: renderInvoice, akun: renderAccount
+};
+
+function render() {
+  const { page, param } = parseRoute();
+  teardownShowcase(); destroyDoodleBanner(); teardownSlitTypeFaq();
+  app.innerHTML = routes[page] ? routes[page](param) : renderNotFound();
+  document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === page));
+  if (page === 'beranda') { window.scrollTo(0, 0); if (lenis) lenis.scrollTo(0, { immediate: true }); heroGo(heroIndex); attachHeroSwipe(); setupShowcase(); initDoodleBanner(); }
+  if (page === 'bantuan') initSlitTypeFaq();
+  if (page === 'katalog') drawCatalogGrid();
+  if (page === 'checkout') drawCheckoutTotals();
+  updateBadge(); setupReveal();
+}
+
+function onRouteChange() {
+  $('#mobile-menu').classList.add('hidden');
+  if (lenis) lenis.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0);
+  render();
+  trackEvent('page_view', { page_path: location.hash || '#/beranda' });
+}
+
+window.addEventListener('hashchange', onRouteChange);
+
+function openModal(id) {
+  const p = getProduct(id); if (!p) return;
+  const habis = p.status === 'Stok Habis';
+  $('#modal-content').innerHTML = `<div class="w-full aspect-square rounded-2xl overflow-hidden ${mediaBg}">${productMedia(p)}</div><span class="inline-block mt-5 text-[11px] font-bold px-3 py-1 rounded-full ${productStatusBadge(p.status)}">${p.status.toUpperCase()}</span><p class="text-[11px] font-bold text-brand uppercase mt-3">${p.artist}</p><h2 class="font-display text-xl font-bold text-maroon">${p.name}</h2><p class="text-2xl font-bold text-maroon mt-1">${formatRp(p.price)}</p><p class="text-sm text-ink/70 mt-4">${p.desc}</p><ul class="mt-4 space-y-2 text-sm">${p.specs.map(s => `<li class="flex gap-2"><span class="text-brand">✦</span>${s}</li>`).join('')}</ul><button data-action="modal-add" data-id="${p.id}" ${habis ? 'disabled' : ''} class="btn-primary w-full mt-6 py-3 rounded-full font-semibold text-sm">${habis ? 'Stok Habis' : '+ Tambah ke Keranjang'}</button>`;
+  const m = $('#modal'); m.classList.remove('hidden'); m.classList.add('flex');
+}
+
+function closeModal() { const m = $('#modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'modal') return closeModal();
+  const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
+  const d = el.dataset;
+  if (d.action === 'add') addToCart(d.id);
+  else if (d.action === 'modal-add') { addToCart(d.id); closeModal(); }
+  else if (d.action === 'detail') openModal(d.id);
+  else if (d.action === 'close-modal') closeModal();
+  else if (d.action === 'qty') changeQty(d.id, parseInt(d.delta, 10));
+  else if (d.action === 'remove') removeItem(d.id);
+  else if (d.action === 'remove-coupon') { coupon = null; render(); }
+  else if (d.action === 'auth-mode') { authMode = d.mode; render(); }
+  else if (d.action === 'logout') { clearSession(); updateAccountLink(); render(); }
+  else if (d.action === 'confirm-payment') markPaid(d.id);
+  else if (d.action === 'print') window.print();
+  else if (d.action === 'copy') copyText(d.value);
+  else if (d.action === 'hero-prev') heroGo(heroIndex - 1);
+  else if (d.action === 'hero-next') heroGo(heroIndex + 1);
+  else if (d.action === 'hero-go') heroGo(parseInt(d.index, 10));
+  else if (d.action === 'artist') { artistFilter = d.name; if (parseRoute().page !== 'katalog') location.hash = '#/katalog'; else drawCatalogGrid(); }
+});
+
+document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#checkout-form')) drawCheckoutTotals(); });
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.target;
+  if (form.id === 'coupon-form') {
+    const code = $('#coupon-input').value.trim().toUpperCase();
+    if (COUPONS[code]) { coupon = { code, ...COUPONS[code] }; showToast(`Kupon ${code} dipakai!`); } else showToast('Kupon tidak valid');
+    render();
+  } else if (form.id === 'auth-form') {
+    const fd = new FormData(form);
+    if (authMode === 'login') handleLogin(fd); else handleRegister(fd);
+  } else if (form.id === 'checkout-form') handleCheckoutSubmit(form);
+});
+
+$('#menu-btn').addEventListener('click', () => $('#mobile-menu').classList.toggle('hidden'));
+initSmoothScroll(); updateBadge(); updateAccountLink(); onRouteChange();
+</script>
+</body>
+</html>
