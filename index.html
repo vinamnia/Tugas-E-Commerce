@@ -403,13 +403,14 @@
     .ab-label { font: 600 12px/1 'Poppins', sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #7a1014; }
     .ab-kicker { margin-top: 28px; font: 600 11px/1 'Poppins', sans-serif; letter-spacing: .22em; text-transform: uppercase; color: #b5121b; }
     .ab-h1 { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; font-size: clamp(1.9rem, 10.5vw, 8.5rem); line-height: .92; letter-spacing: -.02em; color: #2b1719; margin-top: 14px; }
-    .ab-mask { display: block; overflow: hidden; padding-bottom: .06em; }
-    .ab-line { display: block; white-space: nowrap; animation: abRise 1.1s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d); }
+    .ab-mask { display: inline-block; overflow: hidden; padding-bottom: .06em; vertical-align: top; }
+    .ab-line { display: inline-block; white-space: nowrap; animation: abRise 1.1s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d); }
     .ab-line--ind { padding-left: 0; }
     @keyframes abRise { from { transform: translate3d(0,108%,0); } to { transform: none; } }
     .ab-ch { display: inline-block; transition: transform .45s cubic-bezier(.2,.7,.2,1); will-change: transform; }
     .ab-sp { display: inline-block; width: .28em; }
-    .ab-hero-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; margin-top: 28px; }
+    .ab-hero { text-align: center; }
+    .ab-hero-foot { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 28px; }
     
     .ab-lead { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1.1rem, 2vw, 1.4rem); line-height: 1.5; color: #7a1014; max-width: 44ch; }
     .ab-cta-pill { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px; background: #7a1014; color: #fbf6f1; border: 1.5px solid #7a1014; font: 600 14px 'Poppins', sans-serif; transition: background-color .3s, color .3s, border-color .3s; }
@@ -643,7 +644,7 @@
     .t-h3, .ab-svc-title, .ab-note-k, .rv-col h3, .ft-feat h3, .help-note-title, .rv-pr h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: var(--fs-h3); line-height: 1.3; }
     .ab-svc-title { font-size: clamp(1.25rem, 2.2vw, 1.625rem); text-transform: uppercase; }
     .ab-note-k { text-transform: uppercase; }
-    .ab-h1 { line-height: 1.05; }
+    .ab-h1 { font-size: clamp(2.25rem, 4.6vw, 3.75rem); line-height: 1.02; }
 
     /* Label kecil di atas judul */
     .rv-eyebrow, .ab-label, .ab-kicker, .sec-kicker, .rv-foot-h, .rv-callout-k, .rv-pr-k { font-size: var(--fs-label); font-weight: 600; letter-spacing: .16em; line-height: 1.2; }
@@ -658,7 +659,7 @@
 
     /* Ukuran dekoratif diturunkan agar tidak mendominasi */
     .ab-manifesto { font-size: clamp(1.25rem, 2.2vw, 1.625rem); line-height: 1.3; }
-    .ab-lead { font-size: clamp(1rem, 1.6vw, 1.2rem); }
+    .ab-lead { font-size: clamp(1rem, 1.6vw, 1.2rem); max-width: 44ch; margin: 0 auto; }
     .ab-num { font-size: clamp(2rem, 3.4vw, 2.75rem); }
     .ab-w-code { font-size: 2rem; }
     .ab-helix-group span { font-size: clamp(1rem, 1.8vw, 1.25rem); }
