@@ -998,9 +998,11 @@ function imgFail(el) {
 }
 
 function productMedia(p, cls = 'w-full h-full object-cover') {
-  return `<img src="${esc(p.image)}" alt="${esc(p.name)}" data-emoji="${p.emoji}" loading="lazy" decoding="async" class="${cls}" onerror="imgFail(this)" />`;
+  const fullUrl = `https://funstuff-topaz.vercel.app/${p.image.replace(/ /g, '%20')}`;
+  const optSrc = `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=600&output=webp&q=75`;
+  return `<img src="${optSrc}" alt="${esc(p.name)}" data-emoji="${p.emoji}" loading="lazy" decoding="async" class="${cls}" onerror="if(this.src!=='${esc(p.image)}'){this.src='${esc(p.image)}'}else{imgFail(this)}" />`;
 }
-
+  
 function showToast(msg) {
   const t = $('#toast');
   t.textContent = msg;
