@@ -426,8 +426,8 @@
     .ab-helix-row:hover .ab-helix-track { animation-play-state: paused; }
     .ab-helix-group { display: inline-flex; align-items: center; flex: none; }
     .ab-helix-group span { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; font-size: clamp(2.2rem, 6vw, 4.4rem); text-transform: uppercase; letter-spacing: -.01em; color: #2b1719; padding: 0 26px; }
-    .ab-helix-group span.ab-o { color: transparent; -webkit-text-stroke: 1.4px #7a1014; font-style: italic; }
-    .ab-helix-group span::after { content: "✳"; display: inline-block; color: #b5121b; font-size: .42em; margin-left: 52px; vertical-align: middle; font-style: normal; -webkit-text-stroke: 0; }
+    .ab-helix-group span.ab-o { color: #b5121b; font-style: italic; }
+    .ab-helix-group span::after { content: "✳"; display: inline-block; color: #b5121b; font-size: .42em; margin-left: 28px; vertical-align: middle; font-style: normal; -webkit-text-stroke: 0; }
     .ab-helix--big { margin-top: 0; border-top: 0; }
     .ab-helix--big .ab-helix-group span { font-size: clamp(3rem, 9vw, 7rem); }
     @keyframes abLoopL { to { transform: translate3d(-50%,0,0); } }
@@ -564,7 +564,7 @@
     .ab-band:hover .ab-band-track { animation-play-state: paused; }
     .ab-band-group { display: inline-flex; align-items: center; flex: none; }
     .ab-band-group span { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-style: italic; font-size: clamp(1.4rem, 3.4vw, 2.4rem); padding: 0 26px; }
-    .ab-band-group span::after { content: "✳"; color: #e7a24a; font-style: normal; font-size: .7em; margin-left: 52px; vertical-align: middle; }
+    .ab-band-group span::after { content: "✳"; color: #e7a24a; font-style: normal; font-size: .7em; margin-left: 28px; vertical-align: middle; }
 
     /* Layanan */
     .ab-svcs { margin-top: 0; }
@@ -623,6 +623,63 @@
     .rv-wa:hover { background: #b5121b; }
     .rv-bigname { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; font-size: clamp(3rem, 15vw, 10rem); line-height: .9; text-align: center; white-space: nowrap; color: #7a1014; opacity: .1; margin-top: 48px; user-select: none; }
     .rv-copy { border-top: 1px solid rgba(43,23,25,.15); text-align: center; font-size: 12px; color: rgba(43,23,25,.6); padding: 16px; }
+  
+    /* ===================== SISTEM TIPOGRAFI & KOMPONEN ===================== */
+    :root {
+      --fs-h1: clamp(1.75rem, 3.2vw, 2.5rem);
+      --fs-h2: clamp(1.375rem, 2.2vw, 1.75rem);
+      --fs-h3: 1.0625rem;
+      --fs-body: .9375rem;
+      --fs-small: .875rem;
+      --fs-label: .6875rem;
+      --r-sm: 4px;
+      --r-md: 8px;
+      --btn-h: 44px;
+    }
+
+    /* Judul */
+    .t-h1, .ab-h1, .rv-h1 { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: var(--fs-h1); line-height: 1.12; letter-spacing: .02em; text-transform: uppercase; }
+    .t-h2, .rv-h2, .ab-h2, .stf-title, .ab-end-t { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: var(--fs-h2); line-height: 1.2; letter-spacing: .01em; }
+    .t-h3, .ab-svc-title, .ab-note-k, .rv-col h3, .ft-feat h3, .help-note-title, .rv-pr h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: var(--fs-h3); line-height: 1.3; }
+    .ab-svc-title { font-size: clamp(1.25rem, 2.2vw, 1.625rem); text-transform: uppercase; }
+    .ab-note-k { text-transform: uppercase; }
+    .ab-h1 { line-height: 1.05; }
+
+    /* Label kecil di atas judul */
+    .rv-eyebrow, .ab-label, .ab-kicker, .sec-kicker, .rv-foot-h, .rv-callout-k, .rv-pr-k { font-size: var(--fs-label); font-weight: 600; letter-spacing: .16em; line-height: 1.2; }
+
+    /* Teks isi */
+    .ab-body, .ab-svc-text, .rv-lead, .ft-ed-lead { font-size: var(--fs-body); line-height: 1.7; }
+    .ft-feat p, .rv-col p, .value-text, .why-text, .ab-svc-list li, .ab-note-n, .help-note-text, .rv-callout p { font-size: var(--fs-small); line-height: 1.7; }
+    .stf-row { font-size: var(--fs-small); font-weight: 600; }
+    .stf-answer { font-size: var(--fs-small); }
+    .tm-quote { font-size: 1.0625rem; }
+    @media (min-width: 640px) { .tm-quote { font-size: 1.0625rem; } }
+
+    /* Ukuran dekoratif diturunkan agar tidak mendominasi */
+    .ab-manifesto { font-size: clamp(1.25rem, 2.2vw, 1.625rem); line-height: 1.3; }
+    .ab-lead { font-size: clamp(1rem, 1.6vw, 1.2rem); }
+    .ab-num { font-size: clamp(2rem, 3.4vw, 2.75rem); }
+    .ab-w-code { font-size: 2rem; }
+    .ab-helix-group span { font-size: clamp(1rem, 1.8vw, 1.25rem); }
+    .ab-helix--big .ab-helix-group span { font-size: clamp(1.125rem, 2.2vw, 1.5rem); }
+    .ab-band-group span { font-size: clamp(.9375rem, 1.6vw, 1.125rem); }
+    .rv-col-no { font-size: 2rem; }
+    .rv-bigname { font-size: clamp(2.5rem, 9vw, 6rem); }
+    .rv-mobile a { font-size: 1.125rem; }
+
+    /* Tombol: satu tinggi, satu bentuk */
+    .btn-primary, .btn-ghost, .btn-success, .ft-btn, .ab-cta-pill, .rv-wa, .stf-cta {
+      min-height: var(--btn-h); padding: 0 20px; font-size: var(--fs-small); font-weight: 600; line-height: 1; border-radius: var(--r-sm);
+    }
+    .product-card .btn-primary, .product-card .btn-ghost { min-height: 38px; padding: 0 12px; font-size: .8125rem; }
+
+    /* Kartu dan gambar: satu radius */
+    .card, .product-card, .ab-w-btn, .ab-w-img, .ab-svc-img, .rv-tile, .ft-card, .ft-ed-main, .ft-ed-side, .help-note, .rv-callout, .stat-grid { border-radius: var(--r-md); }
+
+    /* Input */
+    input.rounded-xl, select.rounded-xl, textarea.rounded-xl { border-radius: var(--r-sm); }
+    input.rounded-xl, select.rounded-xl { min-height: var(--btn-h); }
   </style>
 </head>
 
@@ -1095,8 +1152,8 @@ function productCard(p) {
 function emptyCartView() {
   return `
   <section class="fade-in text-center py-20">
-    <div class="text-7xl">🛒</div>
-    <h1 class="font-display text-3xl font-bold uppercase text-maroon mt-4">Keranjangmu masih kosong</h1>
+    <div class="text-5xl">🛒</div>
+    <h1 class="t-h1 mt-4">Keranjangmu masih kosong</h1>
     <p class="text-ink/60 mt-2">Yuk, cari merch K-Pop favoritmu!</p>
     <a href="#/katalog" class="btn-primary inline-block mt-6 px-7 py-3 rounded-full text-sm font-semibold">Lihat Katalog</a>
   </section>`;
@@ -1192,7 +1249,7 @@ function renderSlitTypeFaq() {
       <div id="stf-body"></div>
       <div class="stf-contact">
         <p>Masih ada yang bikin bingung?</p>
-        <a class="stf-cta" href="${WA_URL}" target="_blank" rel="noopener">Chat CS WhatsApp →</a>
+        <a class="stf-cta" href="${WA_URL}" target="_blank" rel="noopener">Chat CS WhatsApp</a>
       </div>
     </div>
   </section>`;
@@ -1367,7 +1424,7 @@ function renderHome() {
   </section>
 
   <!-- FITUR: dirancang untuk keseharian -->
-  <section class="reveal mt-20">
+  <section class="reveal mt-24">
     <div class="rv-head">
       <div>
         <p class="rv-eyebrow">Cara kami bikin merch</p>
@@ -1406,7 +1463,7 @@ function renderHome() {
         <p class="rv-eyebrow">Galeri koleksi</p>
         <h2 class="rv-h2">Mau bawa koleksi yang mana hari ini?</h2>
       </div>
-      <a href="#/katalog" class="rv-link">Cek katalog lengkapnya →</a>
+      <a href="#/katalog" class="rv-link">Cek katalog lengkapnya</a>
     </div>
   </section>
   <div class="ft-marquee">
@@ -1434,7 +1491,7 @@ function renderHome() {
         <h2 class="rv-h2">Dari tas harian sampai meja belajar</h2>
         <p class="ft-ed-lead">Setiap produk punya detail kecil yang layak dipamerkan. Pilih yang paling sesuai dengan ritme fandom kamu, lalu lanjut belanja kapan saja.</p>
         <div class="ft-ed-actions">
-          <a href="#/katalog" class="ft-btn ft-btn-solid">Jelajahi katalog <span aria-hidden="true">→</span></a>
+          <a href="#/katalog" class="ft-btn ft-btn-solid">Jelajahi katalog</a>
           <a href="${WA_URL}" target="_blank" rel="noopener" class="ft-btn ft-btn-line">Chat CS sekarang</a>
         </div>
         <ul class="ft-trust">
@@ -1501,7 +1558,7 @@ function renderHome() {
 function renderCatalog() {
   return `
   <section class="fade-in">
-    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon">Katalog</h1>
+    <h1 class="t-h1">Katalog</h1>
     <p class="text-ink/60 mt-2 mb-6">Pilih merch favoritmu. Klik <span class="font-semibold">Detail</span> untuk melihat spesifikasi lengkap.</p>
 
     <div class="card p-4">
@@ -1537,7 +1594,7 @@ function drawCatalogGrid() {
   if (!list.length) {
     grid.innerHTML = `
       <div class="col-span-full text-center py-16">
-        <div class="text-6xl">🫥</div>
+        <div class="text-5xl">🫥</div>
         <p class="font-semibold mt-3">Produk belum tersedia</p>
         <p class="text-sm text-ink/60">Coba kata kunci lain atau pilih artis lain.</p>
       </div>`;
@@ -1634,9 +1691,6 @@ function renderAbout() {
   return `
   <section class="fade-in ab">
     <header class="ab-hero" id="ab-hero">
-      <div class="logo-frame h-24 w-64">
-        <img src="assets/funstuff.png" alt="Funstuff Logo" class="logo-img" />
-      </div>
       <p class="ab-kicker">Teman fandom K-Pop · Indonesia</p>
       <h1 class="ab-h1" aria-label="Cerita fandom dalam desain orisinal">
         <span class="ab-mask"><span class="ab-line" style="--d:0ms">${abSplit('CERITA FANDOM')}</span></span>
@@ -1645,7 +1699,7 @@ function renderAbout() {
       </h1>
       <div class="ab-hero-foot">
         <p class="ab-lead">Funstuff hadir untuk menjaga makna di balik setiap merchandise, dari lagu favorit hingga era comeback yang paling dinanti.</p>
-        <a href="#/katalog" class="ab-cta-pill">Lihat katalog <span aria-hidden="true">↓</span></a>
+        <a href="#/katalog" class="ab-cta-pill">Lihat katalog</a>
       </div>
     </header>
 
@@ -1697,7 +1751,7 @@ function renderAbout() {
             <span class="ab-w-name">${a.name}</span>
             <span class="ab-w-foot">
               <span>${countOf(a.name)} produk</span>
-              <span class="ab-w-go" aria-hidden="true">Lihat koleksi →</span>
+              <span class="ab-w-go" aria-hidden="true">Lihat koleksi</span>
             </span>
           </button>
         </article>`).join('')}
@@ -1749,9 +1803,9 @@ function renderAbout() {
     <div class="ab-end-body reveal">
       <p class="ab-end-t">Ada pertanyaan tentang produk atau pesanan?</p>
       <div class="ab-end-links">
-        <a href="${WA_URL}" target="_blank" rel="noopener" class="ab-cta-pill">Chat CS WhatsApp <span aria-hidden="true">→</span></a>
-        <a href="#/katalog" class="ab-cta-pill is-line">Lihat katalog <span aria-hidden="true">→</span></a>
-        <a href="mailto:halo@funstuff.id" class="ab-mail">halo@funstuff.id ↗</a>
+        <a href="${WA_URL}" target="_blank" rel="noopener" class="ab-cta-pill">Chat CS WhatsApp</a>
+        <a href="#/katalog" class="ab-cta-pill is-line">Lihat katalog</a>
+        <a href="mailto:halo@funstuff.id" class="ab-mail">halo@funstuff.id</a>
       </div>
     </div>
   </section>`;
@@ -1784,7 +1838,7 @@ function renderCart() {
 
   return `
   <section class="fade-in">
-    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon mb-8">Keranjang</h1>
+    <h1 class="t-h1 mb-8">Keranjang</h1>
 
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">
@@ -1837,7 +1891,7 @@ function renderCart() {
 
       <aside class="card h-fit overflow-hidden">
         <div class="bg-sand px-6 py-4">
-          <h2 class="font-display text-xl font-bold uppercase tracking-wide text-maroon">Total Keranjang</h2>
+          <h2 class="t-h3">Total Keranjang</h2>
         </div>
         <div class="p-6 space-y-4 text-sm">
           <div class="flex justify-between"><span class="text-ink/60">Subtotal</span><span>${formatRp(subtotal)}</span></div>
@@ -1865,14 +1919,14 @@ function renderCheckout() {
 
   return `
   <section class="fade-in">
-    <h1 class="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-maroon">Checkout</h1>
+    <h1 class="t-h1">Checkout</h1>
     <p class="text-ink/60 mt-2 mb-8">Lengkapi data pengiriman, pilih kurir, lalu pilih metode pembayaran.</p>
 
     <form id="checkout-form" class="grid lg:grid-cols-3 gap-8" novalidate>
       <div class="lg:col-span-2 space-y-6">
 
         <div class="card p-6">
-          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-5">1. Data Penerima</h2>
+          <h2 class="t-h3 mb-5">1. Data Penerima</h2>
           <div class="grid sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
               <label class="${labelCls}" for="ck-name">Nama Penerima</label>
@@ -1896,7 +1950,7 @@ function renderCheckout() {
         </div>
 
         <div class="card p-6">
-          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-5">2. Pilihan Kurir</h2>
+          <h2 class="t-h3 mb-5">2. Pilihan Kurir</h2>
           <div class="grid sm:grid-cols-3 gap-4">
             ${Object.entries(COURIERS).map(([key, c], i) => `
             <label class="cursor-pointer">
@@ -1911,7 +1965,7 @@ function renderCheckout() {
         </div>
 
         <div class="card p-6">
-          <h2 class="font-display text-lg font-bold uppercase tracking-wide text-maroon mb-5">3. Metode Pembayaran</h2>
+          <h2 class="t-h3 mb-5">3. Metode Pembayaran</h2>
           <div class="grid sm:grid-cols-3 gap-4">
             ${Object.entries(PAYMENTS).map(([key, p], i) => `
             <label class="cursor-pointer">
@@ -1927,7 +1981,7 @@ function renderCheckout() {
 
       <aside class="card h-fit overflow-hidden">
         <div class="bg-sand px-6 py-4">
-          <h2 class="font-display text-xl font-bold uppercase tracking-wide text-maroon">Ringkasan</h2>
+          <h2 class="t-h3">Ringkasan</h2>
         </div>
         <div class="p-6 space-y-4 text-sm">
           <ul class="space-y-3">
@@ -1942,7 +1996,7 @@ function renderCheckout() {
           </ul>
           <div id="checkout-totals" class="space-y-3 border-t border-maroon/10 pt-4"></div>
           <button type="submit" class="btn-primary w-full py-3 rounded-full font-semibold text-sm">Buat Pesanan</button>
-          <a href="#/keranjang" class="block text-center text-xs text-brand hover:underline">← Kembali ke keranjang</a>
+          <a href="#/keranjang" class="block text-center text-xs text-brand hover:underline">Kembali ke keranjang</a>
         </div>
       </aside>
     </form>
@@ -2099,7 +2153,7 @@ function renderInvoice(id) {
       <div class="bg-emerald-700 text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-widest opacity-90">Invoice Pembayaran Lunas - Funstuff</p>
-          <h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1>
+          <h1 class="t-h1">#${esc(order.id)}</h1>
           <p class="text-sm opacity-90 mt-1">Transaksi: ${formatDate(order.createdAt)}</p>
           <p class="text-sm opacity-90">Dibayar: ${formatDate(order.paidAt)}</p>
         </div>
@@ -2108,7 +2162,7 @@ function renderInvoice(id) {
       <div class="bg-maroon text-white px-6 md:px-10 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-widest opacity-80">Invoice Pembayaran - Funstuff</p>
-          <h1 class="font-display text-3xl font-black">#${esc(order.id)}</h1>
+          <h1 class="t-h1">#${esc(order.id)}</h1>
           <p class="text-sm opacity-80 mt-1">${formatDate(order.createdAt)}</p>
         </div>
         <span class="self-start md:self-auto text-xs font-bold px-3 py-1.5 rounded-full bg-white text-maroon">${esc(order.status)}</span>
@@ -2222,7 +2276,7 @@ function renderAuthForms() {
       <div class="logo-frame h-20 w-56 mx-auto">
         <img src="assets/funstuff.png" alt="Funstuff Logo" class="logo-img" />
       </div>
-      <h1 class="font-display text-2xl font-bold uppercase tracking-wide text-maroon mt-4">${isLogin ? 'Login' : 'Registrasi'}</h1>
+      <h1 class="t-h1 mt-4">${isLogin ? 'Login' : 'Registrasi'}</h1>
       <p class="text-sm text-ink/60">${isLogin ? 'Masuk untuk melihat riwayat pesananmu' : 'Buat akun baru untuk penggemar K-Pop'}</p>
     </div>
 
@@ -2291,13 +2345,13 @@ function renderProfile(user) {
     </div>
 
     <div class="grid sm:grid-cols-3 gap-4">
-      <div class="card lift p-6"><p class="font-display text-3xl font-black text-maroon">${orders.length}</p><p class="text-xs mt-1 font-semibold text-ink/70">Total Pesanan</p></div>
-      <div class="card lift p-6"><p class="font-display text-3xl font-black text-emerald-700">${paidOrders.length}</p><p class="text-xs mt-1 font-semibold text-ink/70">Pesanan Lunas</p></div>
-      <div class="card lift p-6"><p class="font-display text-3xl font-black text-maroon">${formatRp(totalSpent)}</p><p class="text-xs mt-1 font-semibold text-ink/70">Total Belanja (Lunas)</p></div>
+      <div class="card lift p-6"><p class="t-h1 text-maroon">${orders.length}</p><p class="text-xs mt-1 font-semibold text-ink/70">Total Pesanan</p></div>
+      <div class="card lift p-6"><p class="t-h1 text-emerald-700">${paidOrders.length}</p><p class="text-xs mt-1 font-semibold text-ink/70">Pesanan Lunas</p></div>
+      <div class="card lift p-6"><p class="t-h1 text-maroon">${formatRp(totalSpent)}</p><p class="text-xs mt-1 font-semibold text-ink/70">Total Belanja (Lunas)</p></div>
     </div>
 
     <div>
-      <h2 class="font-display text-xl md:text-2xl font-bold uppercase tracking-wider text-maroon border-b border-maroon/20 pb-3 mb-6">Riwayat Pesanan Saya</h2>
+      <h2 class="t-h2 border-b border-maroon/20 pb-3 mb-6">Riwayat Pesanan Saya</h2>
       ${orders.length ? `
         <div class="space-y-4">
           ${orders.map(o => `
@@ -2366,8 +2420,8 @@ function handleRegister(fd) {
 function renderNotFound() {
   return `
   <section class="text-center py-20">
-    <div class="text-7xl">🫠</div>
-    <h1 class="font-display text-3xl font-bold uppercase text-maroon mt-4">Halaman tidak ditemukan</h1>
+    <div class="text-5xl">🫠</div>
+    <h1 class="t-h1 mt-4">Halaman tidak ditemukan</h1>
     <a href="#/beranda" class="btn-primary inline-block mt-6 px-7 py-3 rounded-full text-sm font-semibold">Kembali ke Beranda</a>
   </section>`;
 }
@@ -3351,8 +3405,8 @@ function openModal(id) {
     </div>
     <span class="inline-block mt-5 text-[11px] font-bold px-3 py-1 rounded-full ${productStatusBadge(p.status)}">${p.status.toUpperCase()}</span>
     <p class="text-[11px] font-bold text-brand uppercase mt-3">${p.artist}</p>
-    <h2 class="font-display text-xl font-bold leading-snug text-maroon">${p.name}</h2>
-    <p class="text-2xl font-bold text-maroon mt-1">${formatRp(p.price)}</p>
+    <h2 class="t-h3">${p.name}</h2>
+    <p class="text-lg font-bold text-maroon mt-1">${formatRp(p.price)}</p>
     <p class="text-sm text-ink/70 mt-4 leading-relaxed">${p.desc}</p>
     <ul class="mt-4 space-y-2 text-sm">
       ${p.specs.map(s => `<li class="flex gap-2"><span class="text-brand">✦</span>${s}</li>`).join('')}
